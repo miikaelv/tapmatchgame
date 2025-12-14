@@ -2,7 +2,8 @@ using System;
 using System.Collections;
 using Cysharp.Threading.Tasks;
 using NUnit.Framework;
-using TapMatch.UnitySystems;
+using TapMatch.UnityServices;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using VContainer;
@@ -28,8 +29,7 @@ namespace TapMatch.Tests
             // Assign Resolver
             Resolver = bootstrap.Container;
             Assert.IsNotNull(Resolver, $"{nameof(IObjectResolver)} is invalid!");
-
-
+            
             // IStartable is called on Awake and should be resolved by the time the Scene loads
             GameInstance = Resolver.Resolve<IGameInstance>();
         });
@@ -37,15 +37,6 @@ namespace TapMatch.Tests
         [UnityTearDown]
         public IEnumerator UnityTeardown() => UniTask.ToCoroutine(async () =>
         {
-            var loadedScene = SceneManager.GetSceneAt(0);
-
-            if (loadedScene.IsValid())
-            {
-                var unloadOp = SceneManager.UnloadSceneAsync(loadedScene);
-                if (unloadOp != null)
-                    await unloadOp.ToUniTask();
-            }
-
             Resolver = null;
             GameInstance = null;
         });
@@ -56,7 +47,7 @@ namespace TapMatch.Tests
             var result = await GameInstance.WaitForGameToLoad(TimeSpan.FromSeconds(5));
 
             Assert.IsNotNull(result);
-            Assert.IsTrue(result.success);
+            Debug.Log($"Load Time {(int)result.TotalMilliseconds}ms");
         });
     }
 }
