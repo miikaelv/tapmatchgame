@@ -1,6 +1,6 @@
 using Views;
 
-namespace TapMatch.Tests.TestAssets
+namespace TapMatch.Tests.PlayMode.TestAssets
 {
     public class TestAsset : View
     {

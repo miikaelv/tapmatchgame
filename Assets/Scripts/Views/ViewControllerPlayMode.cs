@@ -21,7 +21,7 @@ namespace Views
         public UniTask<bool> Hide(CancellationToken ct);
     }
 
-    public abstract class ViewController<T> : IViewController, IDisposable where T : View
+    public abstract class ViewControllerPlayMode<T> : IViewController, IDisposable where T : View
     {
         protected T View;
         private T LoadedAsset;
@@ -33,7 +33,7 @@ namespace Views
 
         private readonly IAssetService AssetService;
 
-        protected ViewController(IAssetService assetService)
+        protected ViewControllerPlayMode(IAssetService assetService)
         {
             AssetService = assetService;
         }

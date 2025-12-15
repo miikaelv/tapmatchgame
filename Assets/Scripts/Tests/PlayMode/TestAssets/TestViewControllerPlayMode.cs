@@ -3,16 +3,16 @@ using Cysharp.Threading.Tasks;
 using TapMatch.UnityServices;
 using Views;
 
-namespace TapMatch.Tests.TestAssets
+namespace TapMatch.Tests.PlayMode.TestAssets
 {
-    public class TestViewController : ViewController<TestAsset>
+    public class TestViewControllerPlayMode : ViewControllerPlayMode<TestAsset>
     {
         public bool OnInstantiateCalled { get; private set; }
         public bool OnPreShowCalled { get; private set; }
         public bool OnPostShowCalled { get; private set; }
         public bool OnHideCalled { get; private set; }
 
-        public TestViewController(IAssetService assetService) : base(assetService)
+        public TestViewControllerPlayMode(IAssetService assetService) : base(assetService)
         {
         }
 

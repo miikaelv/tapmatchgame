@@ -2,13 +2,13 @@ using System.Collections;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using NUnit.Framework;
-using TapMatch.Tests.TestAssets;
+using TapMatch.Tests.PlayMode.TestAssets;
 using TapMatch.UnityServices;
 using UnityEngine;
 using UnityEngine.TestTools;
 using VContainer;
 
-namespace TapMatch.Tests.Tests
+namespace TapMatch.Tests.PlayMode
 {
     public class AssetServiceTests : ServiceTestBase<AssetService>
     {

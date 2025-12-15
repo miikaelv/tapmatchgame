@@ -1,45 +1,23 @@
-using System;
 using System.Collections;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine.TestTools;
-using VContainer;
-using VContainer.Unity;
 
-namespace TapMatch.Tests
+namespace TapMatch.Tests.PlayMode
 {
-    public abstract class ServiceTestBase<T> where T : IDisposable
+    public abstract class PlayModeTestBase
     {
-        private LifetimeScope Scope;
-        private IObjectResolver Container;
-        protected T Service;
-
         private readonly CancellationTokenSource CTSource = new();
         protected CancellationToken CT => CTSource.Token;
-        protected abstract void CreateContext(IContainerBuilder builder);
         private bool OneTimeUnitySetUpDone;
 
-        private void BuildEnvironment()
+        protected virtual void BuildEnvironment()
         {
-            Scope = LifetimeScope.Create(CreateContext);
-            Container = Scope.Container;
-            ResolveService();
         }
 
-        protected void ResolveService()
+        protected virtual void ResetEnvironment()
         {
-            if (Service != null) Service.Dispose();
-            Service = Container.Resolve<T>();
-        }
-
-        private void ResetEnvironment()
-        {
-            if (Container != null) Container.Dispose();
-            if (Scope != null) Scope.Dispose();
-
-            Container = null;
-            Service = default;
         }
 
         [OneTimeSetUp]
@@ -99,9 +77,11 @@ namespace TapMatch.Tests
         protected virtual UniTask OnOneTimeUnitySetup(CancellationToken ct) => UniTask.CompletedTask;
         protected virtual UniTask OnUnitySetup(CancellationToken ct) => UniTask.CompletedTask;
         protected virtual UniTask OnUnityTearDown(CancellationToken ct) => UniTask.CompletedTask;
+
         protected virtual void OnOneTimeSetup()
         {
         }
+
         protected virtual void OnOneTimeTearDown()
         {
         }

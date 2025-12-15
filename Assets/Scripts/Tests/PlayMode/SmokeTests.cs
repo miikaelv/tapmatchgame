@@ -9,7 +9,7 @@ using UnityEngine.TestTools;
 using VContainer;
 using Object = UnityEngine.Object;
 
-namespace TapMatch.Tests.Tests
+namespace TapMatch.Tests.PlayMode
 {
     public class SmokeTests
     {

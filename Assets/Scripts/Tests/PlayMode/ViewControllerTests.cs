@@ -2,20 +2,20 @@ using System.Collections;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using NUnit.Framework;
-using TapMatch.Tests.TestAssets;
+using TapMatch.Tests.PlayMode.TestAssets;
 using TapMatch.UnityServices;
 using UnityEngine.TestTools;
 using VContainer;
 using Views;
 
-namespace TapMatch.Tests.Tests
+namespace TapMatch.Tests.PlayMode
 {
-    public class ViewControllerTests : ServiceTestBase<TestViewController>
+    public class ViewControllerTests : ServiceTestBase<TestViewControllerPlayMode>
     {
         protected override void CreateContext(IContainerBuilder builder)
         {
             builder.RegisterAssetService();
-            builder.Register<TestViewController>(Lifetime.Transient);
+            builder.Register<TestViewControllerPlayMode>(Lifetime.Transient);
         }
 
         protected override UniTask OnUnitySetup(CancellationToken ct)
