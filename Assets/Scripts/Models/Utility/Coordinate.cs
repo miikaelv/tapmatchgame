@@ -41,8 +41,10 @@ namespace TapMatch.Models.Utility
         {
             return new Coordinate[]
             {
-                new(X + 1, Y), new(X - 1, 0),
-                new(0, Y + 1), new(0, Y - 1)
+                new(X + 1, Y), 
+                new(X - 1, Y), 
+                new(X, Y + 1),
+                new(X, Y - 1)
             };
         }
 
@@ -50,7 +52,7 @@ namespace TapMatch.Models.Utility
         {
             return new Coordinate[]
             {
-                new(X + 1, Y), new(X - 1, 0),
+                new(X + 1, Y), new(X - 1, Y),
                 new(X, Y + 1), new(X, Y - 1),
                 new(X - 1, Y - 1), new(X + 1, Y - 1),
                 new(X - 1, Y + 1), new(X + 1, Y + 1),

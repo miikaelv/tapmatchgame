@@ -19,8 +19,9 @@ namespace TapMatch.Tests.EditMode
             MatchableType.Yellow,
         });
 
-        protected override GridModel CreateModelOnSetup() => new (GridConfig, new Random(Seed));
-        
+
+        protected override GridModel CreateModelOnSetup() => new(GridConfig, new Random(Seed));
+
         [Test]
         public void Grid_has_correct_dimensions()
         {
@@ -29,9 +30,9 @@ namespace TapMatch.Tests.EditMode
             Assert.AreEqual(GridConfig.Width, Model.Grid.GetLength(0));
             Assert.AreEqual(GridConfig.Height, Model.Grid.GetLength(1));
         }
-        
+
         [Test]
-        public void Grid_ContainsOnlyValidMatchables()
+        public void Grid_contains_only_valid_matchables()
         {
             for (var x = 0; x < Model.Width; x++)
             {
@@ -42,9 +43,9 @@ namespace TapMatch.Tests.EditMode
                 }
             }
         }
-        
+
         [Test]
-        public void TryGetMatchableAtPosition_ReturnsTrue_ForValidCoordinate()
+        public void Can_get_matchable_with_coordinate()
         {
             var coordinate = new Coordinate(0, 0);
 
@@ -53,9 +54,9 @@ namespace TapMatch.Tests.EditMode
             Assert.IsTrue(success);
             Assert.AreEqual(Model.Grid[coordinate.X, coordinate.Y], matchable);
         }
-        
+
         [Test]
-        public void TryGetMatchableAtPosition_ReturnsFalse_ForInvalidCoordinate()
+        public void Invalid_coordinate_returns_false_matchable()
         {
             var coordinate = new Coordinate(100, 100);
 
@@ -63,6 +64,37 @@ namespace TapMatch.Tests.EditMode
 
             Assert.IsFalse(success);
             Assert.AreEqual(MatchableType.None, matchable);
+        }
+
+        private readonly List<Coordinate> ExpectedCoordinates = new()
+        {
+            new Coordinate(0, 1),
+            new Coordinate(0, 2),
+            new Coordinate(1, 2),
+            new Coordinate(2, 2),
+            new Coordinate(2, 1),
+            new Coordinate(2, 0),
+            new Coordinate(3, 0),
+        };
+
+        private readonly Coordinate MatchStartCoordinate = new(0, 1);
+
+        private readonly MatchableType[,] ManualGrid =
+        {
+            { MatchableType.Green, MatchableType.Red, MatchableType.Red, MatchableType.Yellow },
+            { MatchableType.Blue, MatchableType.Green, MatchableType.Red, MatchableType.Yellow },
+            { MatchableType.Red, MatchableType.Red, MatchableType.Red, MatchableType.Yellow },
+            { MatchableType.Red, MatchableType.Green, MatchableType.Blue, MatchableType.Yellow },
+        };
+
+        [Test]
+        public void Can_get_all_connecting_matchables()
+        {
+            var manualModel = new GridModel(ManualGrid, GridConfig.ValidMatchables.ToArray());
+            var matched = manualModel.GetConnectingMatchables(MatchStartCoordinate);
+
+            CollectionAssert.AreEquivalent(ExpectedCoordinates, matched,
+                $"Expected: {string.Join(", ", ExpectedCoordinates)}; Got: {string.Join(", ", matched)}");
         }
     }
 }

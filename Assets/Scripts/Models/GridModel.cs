@@ -12,7 +12,7 @@ namespace TapMatch.Models
         public bool IsCoordinateValidOnGrid(Coordinate coordinate);
         public bool TryGetMatchableAtPosition(Coordinate coordinate, out MatchableType matchable);
     }
-    
+
     [Serializable]
     public class GridModel : IGridReader
     {
@@ -20,7 +20,15 @@ namespace TapMatch.Models
         public int Height { get; }
         private readonly MatchableType[] ValidMatchables;
         public readonly MatchableType[,] Grid;
-        
+
+        public GridModel(MatchableType[,] grid, MatchableType[] validMatchables)
+        {
+            Width = grid.GetLength(0);
+            Height = grid.GetLength(1);
+            Grid = grid;
+            ValidMatchables = validMatchables;
+        }
+
         public GridModel(GridConfig config, Random rng)
         {
             Width = config.Width;
@@ -43,25 +51,62 @@ namespace TapMatch.Models
 
             return matchables;
         }
-        
+
         private MatchableType CreateRandomMatchable(Random rng)
         {
             return ValidMatchables[rng.Next(ValidMatchables.Length)];
         }
-        
-        public bool IsCoordinateValidOnGrid(Coordinate coordinate) => coordinate.X < 0 || coordinate.X >= Width ||
-                                                                coordinate.Y < 0 || coordinate.Y >= Height;
-        
+
+        public bool IsCoordinateValidOnGrid(Coordinate coordinate) => coordinate.X >= 0 && coordinate.X < Width &&
+                                                                      coordinate.Y >= 0 && coordinate.Y < Height;
+
         public bool TryGetMatchableAtPosition(Coordinate coordinate, out MatchableType matchable)
         {
             matchable = MatchableType.None;
 
-            if (IsCoordinateValidOnGrid(coordinate))
+            if (!IsCoordinateValidOnGrid(coordinate))
                 return false;
 
             matchable = Grid[coordinate.X, coordinate.Y];
 
             return matchable != MatchableType.None;
+        }
+
+        // Depth First Flood Fill from target coordinate
+        public List<Coordinate> GetConnectingMatchables(Coordinate start)
+        {
+            var matched = new List<Coordinate>();
+
+            if (!TryGetMatchableAtPosition(start, out var targetType))
+                return matched;
+
+            var visited = new bool[Width, Height];
+            var stack = new Stack<Coordinate>();
+            stack.Push(start);
+            visited[start.X, start.Y] = true;
+
+            while (stack.Count > 0)
+            {
+                var current = stack.Pop();
+                matched.Add(current);
+
+                foreach (var neighbor in current.GetOrthogonalNeighbors())
+                {
+                    if (!IsCoordinateValidOnGrid(neighbor)) 
+                        continue;
+
+                    if (visited[neighbor.X, neighbor.Y])
+                        continue;
+
+                    if (Grid[neighbor.X, neighbor.Y] != targetType)
+                        continue;
+
+                    stack.Push(neighbor);
+                    visited[neighbor.X, neighbor.Y] = true;
+                }
+            }
+
+            return matched;
         }
     }
 }
