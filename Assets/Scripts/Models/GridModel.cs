@@ -13,6 +13,18 @@ namespace TapMatch.Models
         public bool TryGetMatchableAtPosition(Coordinate coordinate, out MatchableType matchable);
     }
 
+    public class TileMovement
+    {
+        private readonly Coordinate StartCoordinate;
+        private readonly Coordinate EndCoordinate;
+
+        public TileMovement(Coordinate startCoordinate, Coordinate endCoordinate)
+        {
+            StartCoordinate = startCoordinate;
+            EndCoordinate = endCoordinate;
+        }
+    }
+    
     [Serializable]
     public class GridModel : IGridReader
     {
@@ -36,6 +48,42 @@ namespace TapMatch.Models
             ValidMatchables = config.ValidMatchables.ToArray();
             Grid = CreateMatchables(rng);
         }
+        
+        public List<TileMovement> ApplyGravity()
+        {
+            var movements = new List<TileMovement>();
+
+            for (var x = 0; x < Width; x++)
+            {
+                // Previous position on the Y axis where Matchable would stop falling
+                var bottomPosition = 0; 
+
+                // Move up from the bottom of the Y axis
+                for (var y = 0; y < Height; y++)
+                {
+                    var matchable = Grid[x, y];
+                
+                    // Skip if no Matchable
+                    if (matchable == MatchableType.None) continue;
+                    
+                    // Check if the tile needs to move down
+                    if (y != bottomPosition)
+                    {
+                        var startCoordinate = new Coordinate(x, y);
+                        var endCoordinate = new Coordinate(x, bottomPosition);
+                        movements.Add(new TileMovement(startCoordinate, endCoordinate));
+
+                        Grid[x, bottomPosition] = matchable;
+                        Grid[x, y] = MatchableType.None;
+                    }
+                    
+                    // Increment the bottom position to account for the existing or fallen Matchable
+                    bottomPosition++;
+                }
+            }
+        
+            return movements;
+        }
 
         private MatchableType[,] CreateMatchables(Random rng)
         {
@@ -52,14 +100,19 @@ namespace TapMatch.Models
             return matchables;
         }
 
-        private MatchableType CreateRandomMatchable(Random rng)
-        {
-            return ValidMatchables[rng.Next(ValidMatchables.Length)];
-        }
+        private MatchableType CreateRandomMatchable(Random rng) => ValidMatchables[rng.Next(ValidMatchables.Length)];
 
         public bool IsCoordinateValidOnGrid(Coordinate coordinate) => coordinate.X >= 0 && coordinate.X < Width &&
                                                                       coordinate.Y >= 0 && coordinate.Y < Height;
 
+        public void ClearMatchables(IEnumerable<Coordinate> coordinates)
+        {
+            foreach (var coordinate in coordinates)
+            {
+                Grid[coordinate.X, coordinate.Y] = MatchableType.None;
+            }
+        }
+        
         public bool TryGetMatchableAtPosition(Coordinate coordinate, out MatchableType matchable)
         {
             matchable = MatchableType.None;

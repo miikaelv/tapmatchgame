@@ -84,7 +84,15 @@ namespace TapMatch.Tests.EditMode
             { MatchableType.Green, MatchableType.Red, MatchableType.Red, MatchableType.Yellow },
             { MatchableType.Blue, MatchableType.Green, MatchableType.Red, MatchableType.Yellow },
             { MatchableType.Red, MatchableType.Red, MatchableType.Red, MatchableType.Yellow },
-            { MatchableType.Red, MatchableType.Green, MatchableType.Blue, MatchableType.Yellow },
+            { MatchableType.Red, MatchableType.Green, MatchableType.Blue, MatchableType.Red },
+        };
+
+        private readonly MatchableType[,] ExpectedGridAfterGravity =
+        {
+            { MatchableType.None, MatchableType.None, MatchableType.None, MatchableType.Yellow },
+            { MatchableType.None, MatchableType.None, MatchableType.None, MatchableType.Yellow },
+            { MatchableType.Green, MatchableType.Green, MatchableType.None, MatchableType.Yellow },
+            { MatchableType.Blue, MatchableType.Green, MatchableType.Blue, MatchableType.Red },
         };
 
         [Test]
@@ -93,8 +101,21 @@ namespace TapMatch.Tests.EditMode
             var manualModel = new GridModel(ManualGrid, GridConfig.ValidMatchables.ToArray());
             var matched = manualModel.GetConnectingMatchables(MatchStartCoordinate);
 
-            CollectionAssert.AreEquivalent(ExpectedCoordinates, matched,
-                $"Expected: {string.Join(", ", ExpectedCoordinates)}; Got: {string.Join(", ", matched)}");
+            CollectionAssert.AreEquivalent(ExpectedCoordinates, matched);
+        }
+
+        [Test]
+        public void Gravity_works_correctly_after_clearing_matchables()
+        {
+            var manualModel = new GridModel(ManualGrid, GridConfig.ValidMatchables.ToArray());
+            var matched = manualModel.GetConnectingMatchables(MatchStartCoordinate);
+
+            CollectionAssert.AreEquivalent(ExpectedCoordinates, matched);
+
+            manualModel.ClearMatchables(matched);
+            manualModel.ApplyGravity();
+
+            CollectionAssert.AreEquivalent(ExpectedGridAfterGravity, manualModel.Grid);
         }
     }
 }
