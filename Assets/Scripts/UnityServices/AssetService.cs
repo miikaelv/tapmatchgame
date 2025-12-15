@@ -10,11 +10,14 @@ namespace TapMatch.UnityServices
 {
     public interface IAssetService
     {
+        public bool IsAssetLoaded(string id);
+        public bool ReleaseAsset(string id);
+        public void UnloadUnusedAssets();
         public UniTask<T> LoadAsset<T>(string id, CancellationToken ct) where T : Component;
         public UniTask<T> LoadSingletonAsset<T>(CancellationToken ct) where T : MonoBehaviour;
     }
 
-    public class AssetService : IAssetService
+    public class AssetService : IAssetService, IDisposable
     {
         private readonly Dictionary<string, AsyncOperationHandle<GameObject>> AssetHandles = new();
 
@@ -39,7 +42,30 @@ namespace TapMatch.UnityServices
                 return false;
             }
         }
-        
+
+        public bool IsAssetLoaded(string id)
+        {
+            if(!AssetHandles.TryGetValue(id, out var handle))
+                return false;
+            
+            return handle.Status == AsyncOperationStatus.Succeeded;
+        }
+
+        public bool ReleaseAsset(string id)
+        {
+            if (!AssetHandles.TryGetValue(id, out var handle))
+                return false;
+
+            Addressables.Release(handle);
+            AssetHandles.Remove(id);
+            return true;
+        }
+
+        public void UnloadUnusedAssets()
+        {
+            Resources.UnloadUnusedAssets();
+        }
+
         public async UniTask<T> LoadAsset<T>(string id, CancellationToken ct)
             where T : Component
         {
@@ -72,6 +98,17 @@ namespace TapMatch.UnityServices
             return !handle.Result.TryGetComponent<T>(out var component)
                 ? throw new ArgumentException($"Asset \"{id}\" does not contain component of type {typeof(T).Name}")
                 : component;
+        }
+
+        public void Dispose()
+        {
+            UnloadUnusedAssets();
+            foreach (var handle in AssetHandles.Values)
+            {
+                Addressables.Release(handle);
+            }
+            
+            AssetHandles.Clear();
         }
     }
 }

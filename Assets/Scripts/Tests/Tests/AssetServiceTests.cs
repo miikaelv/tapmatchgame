@@ -2,20 +2,19 @@ using System.Collections;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using NUnit.Framework;
+using TapMatch.Tests.TestAssets;
 using TapMatch.UnityServices;
 using UnityEngine;
 using UnityEngine.TestTools;
 using VContainer;
 
-namespace TapMatch.Tests
+namespace TapMatch.Tests.Tests
 {
     public class AssetServiceTests : ServiceTestBase<AssetService>
     {
-        protected override ContainerBuilder CreateContext(ContainerBuilder builder)
+        protected override void CreateContext(IContainerBuilder builder)
         {
-            builder.Register<AssetService>(Lifetime.Singleton);
-
-            return builder;
+            builder.RegisterAssetService();
         }
 
         protected override async UniTask OnOneTimeUnitySetup(CancellationToken ct)

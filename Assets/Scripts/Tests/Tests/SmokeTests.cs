@@ -9,7 +9,7 @@ using UnityEngine.TestTools;
 using VContainer;
 using Object = UnityEngine.Object;
 
-namespace TapMatch.Tests
+namespace TapMatch.Tests.Tests
 {
     public class SmokeTests
     {
@@ -29,17 +29,18 @@ namespace TapMatch.Tests
             // Assign Resolver
             Resolver = bootstrap.Container;
             Assert.IsNotNull(Resolver, $"{nameof(IObjectResolver)} is invalid!");
-            
+
             // IStartable is called on Awake and should be resolved by the time the Scene loads
             GameInstance = Resolver.Resolve<IGameInstance>();
         });
 
         [UnityTearDown]
-        public IEnumerator UnityTeardown() => UniTask.ToCoroutine(async () =>
+        public IEnumerator UnityTeardown()
         {
             Resolver = null;
             GameInstance = null;
-        });
+            yield return null;
+        }
 
         [UnityTest]
         public IEnumerator Can_load_game() => UniTask.ToCoroutine(async () =>
@@ -47,6 +48,7 @@ namespace TapMatch.Tests
             var result = await GameInstance.WaitForGameToLoad(TimeSpan.FromSeconds(5));
 
             Assert.IsNotNull(result);
+            Assert.IsTrue(result > TimeSpan.Zero, "Invalid load time result");
             Debug.Log($"Load Time {(int)result.TotalMilliseconds}ms");
         });
     }
