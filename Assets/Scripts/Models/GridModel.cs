@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using TapMatch.Models.Configs;
 using TapMatch.Models.Utility;
+using Random = System.Random;
 
 namespace TapMatch.Models
 {
@@ -13,91 +16,37 @@ namespace TapMatch.Models
         public bool TryGetMatchableAtPosition(Coordinate coordinate, out MatchableType matchable);
     }
 
-    public class TileMovement
-    {
-        private readonly Coordinate StartCoordinate;
-        private readonly Coordinate EndCoordinate;
-
-        public TileMovement(Coordinate startCoordinate, Coordinate endCoordinate)
-        {
-            StartCoordinate = startCoordinate;
-            EndCoordinate = endCoordinate;
-        }
-    }
-    
     [Serializable]
     public class GridModel : IGridReader
     {
-        public int Width { get; }
-        public int Height { get; }
+        public int Width => Grid.Width;
+        public int Height => Grid.Height;
+
         private readonly MatchableType[] ValidMatchables;
-        public readonly MatchableType[,] Grid;
+        public readonly GameGrid Grid;
 
         public GridModel(MatchableType[,] grid, MatchableType[] validMatchables)
         {
-            Width = grid.GetLength(0);
-            Height = grid.GetLength(1);
-            Grid = grid;
+            Grid = new GameGrid(grid);
             ValidMatchables = validMatchables;
         }
 
         public GridModel(GridConfig config, Random rng)
         {
-            Width = config.Width;
-            Height = config.Height;
             ValidMatchables = config.ValidMatchables.ToArray();
-            Grid = CreateMatchables(rng);
-        }
-        
-        public List<TileMovement> ApplyGravity()
-        {
-            var movements = new List<TileMovement>();
-
-            for (var x = 0; x < Width; x++)
-            {
-                // Previous position on the Y axis where Matchable would stop falling
-                var bottomPosition = 0; 
-
-                // Move up from the bottom of the Y axis
-                for (var y = 0; y < Height; y++)
-                {
-                    var matchable = Grid[x, y];
-                
-                    // Skip if no Matchable
-                    if (matchable == MatchableType.None) continue;
-                    
-                    // Check if the tile needs to move down
-                    if (y != bottomPosition)
-                    {
-                        var startCoordinate = new Coordinate(x, y);
-                        var endCoordinate = new Coordinate(x, bottomPosition);
-                        movements.Add(new TileMovement(startCoordinate, endCoordinate));
-
-                        Grid[x, bottomPosition] = matchable;
-                        Grid[x, y] = MatchableType.None;
-                    }
-                    
-                    // Increment the bottom position to account for the existing or fallen Matchable
-                    bottomPosition++;
-                }
-            }
-        
-            return movements;
+            Grid = new GameGrid(config.Width, config.Height);
+            FillWholeGridWithMatchables(rng);
         }
 
-        private MatchableType[,] CreateMatchables(Random rng)
+        private void FillWholeGridWithMatchables(Random rng)
         {
-            var matchables = new MatchableType[Width, Height];
-
             for (var x = 0; x < Width; x++)
             {
                 for (var y = 0; y < Height; y++)
                 {
-                    matchables[x, y] = CreateRandomMatchable(rng);
+                    Grid[x, y] = CreateRandomMatchable(rng);
                 }
             }
-
-            return matchables;
         }
 
         private MatchableType CreateRandomMatchable(Random rng) => ValidMatchables[rng.Next(ValidMatchables.Length)];
@@ -112,7 +61,7 @@ namespace TapMatch.Models
                 Grid[coordinate.X, coordinate.Y] = MatchableType.None;
             }
         }
-        
+
         public bool TryGetMatchableAtPosition(Coordinate coordinate, out MatchableType matchable)
         {
             matchable = MatchableType.None;
@@ -145,7 +94,7 @@ namespace TapMatch.Models
 
                 foreach (var neighbor in current.GetOrthogonalNeighbors())
                 {
-                    if (!IsCoordinateValidOnGrid(neighbor)) 
+                    if (!IsCoordinateValidOnGrid(neighbor))
                         continue;
 
                     if (visited[neighbor.X, neighbor.Y])
@@ -160,6 +109,122 @@ namespace TapMatch.Models
             }
 
             return matched;
+        }
+        
+        public List<TileMovement> ApplyGravity()
+        {
+            var movements = new List<TileMovement>();
+
+            for (var x = 0; x < Width; x++)
+            {
+                // Previous position on the Y axis where Matchable would stop falling
+                var bottomPosition = 0;
+
+                // Move up from the bottom of the Y axis
+                for (var y = 0; y < Height; y++)
+                {
+                    var matchable = Grid[x, y];
+
+                    // Skip if no Matchable
+                    if (matchable == MatchableType.None) continue;
+
+                    // Check if the tile needs to move down
+                    if (y != bottomPosition)
+                    {
+                        var startCoordinate = new Coordinate(x, y);
+                        var endCoordinate = new Coordinate(x, bottomPosition);
+                        movements.Add(new TileMovement(startCoordinate, endCoordinate));
+
+                        Grid[x, bottomPosition] = matchable;
+                        Grid[x, y] = MatchableType.None;
+                    }
+
+                    // Increment the bottom position to account for the existing or fallen Matchable
+                    bottomPosition++;
+                }
+            }
+
+            return movements;
+        }
+
+        public List<NewTilesColumn> RefillEmptySpaces(Random rng)
+        {
+            var newTilesData = new List<NewTilesColumn>();
+
+            for (var x = 0; x < Width; x++)
+            {
+                var newTileStack = new Stack<(Coordinate coordinate, MatchableType matchable)>();
+
+                // Starting from the top, for each None tile, create new Matchable and add it to tileStack
+                for (var y = Height - 1; y >= 0; y--)
+                {
+                    if (Grid[x, y] != MatchableType.None) break;
+
+                    var newType = CreateRandomMatchable(rng);
+                    newTileStack.Push(new ValueTuple<Coordinate, MatchableType>(new Coordinate(x, y), newType));
+
+                    Grid[x, y] = newType;
+                }
+
+                if (newTileStack.Count <= 0) continue;
+
+                // Stack is converted to list in order of Pop
+                newTilesData.Add(new NewTilesColumn(x, newTileStack.ToList()));
+            }
+
+            return newTilesData;
+        }
+
+        public string GridToString()
+        {
+            var sb = new StringBuilder();
+
+            for (var y = 0; y < Height; y++)
+            {
+                for (var x = 0; x < Width; x++)
+                {
+                    sb.Append(Grid[x, y]);
+
+                    if (x < Width - 1)
+                        sb.Append(", ");
+                }
+
+                if (y < Height - 1)
+                    sb.AppendLine();
+            }
+
+            return sb.ToString();
+        }
+        
+        public string GridToString2()
+        {
+            return string.Join("\n",
+                Enumerable.Range(0, Height).Select(r =>
+                    string.Join(", ", Enumerable.Range(0, Width).Select(c => Grid[r, c]))));
+        }
+    }
+
+    public readonly struct NewTilesColumn
+    {
+        public readonly int X;
+        public readonly List<(Coordinate targetCoordinate, MatchableType matchable)> NewTiles;
+
+        public NewTilesColumn(int x, List<(Coordinate targetCoordinate, MatchableType matchable)> newTiles)
+        {
+            X = x;
+            NewTiles = newTiles;
+        }
+    }
+
+    public readonly struct TileMovement
+    {
+        private readonly Coordinate StartCoordinate;
+        private readonly Coordinate EndCoordinate;
+
+        public TileMovement(Coordinate startCoordinate, Coordinate endCoordinate)
+        {
+            StartCoordinate = startCoordinate;
+            EndCoordinate = endCoordinate;
         }
     }
 }
