@@ -16,8 +16,8 @@ namespace TapMatch.Views
     public class GameInstance : IStartable, IGameInstance, IDisposable
     {
         public bool GameLoadComplete { get; private set; }
-        private readonly CancellationTokenSource GlobalCTSource = new();
-        private CancellationToken GlobalCT => GlobalCTSource.Token;
+        private static readonly CancellationTokenSource GlobalCTSource = new();
+        public static CancellationToken GlobalCT => GlobalCTSource.Token;
         private DateTime TimeGameLoadStarted;
         private DateTime TimeGameLoadFinished;
 

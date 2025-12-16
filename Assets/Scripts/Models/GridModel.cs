@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using TapMatch.Models.Configs;
 using TapMatch.Models.Utility;
+using UnityEngine;
 using Random = System.Random;
 
 namespace TapMatch.Models
@@ -121,9 +122,9 @@ namespace TapMatch.Models
             return matched;
         }
         
-        public List<TileMovement> ApplyGravity()
+        public List<GravityMovement> ApplyGravity()
         {
-            var movements = new List<TileMovement>();
+            var movements = new List<GravityMovement>();
 
             for (var x = 0; x < Width; x++)
             {
@@ -143,7 +144,7 @@ namespace TapMatch.Models
                     {
                         var startCoordinate = new Coordinate(x, y);
                         var endCoordinate = new Coordinate(x, bottomPosition);
-                        movements.Add(new TileMovement(startCoordinate, endCoordinate));
+                        movements.Add(new GravityMovement(matchable.Id, startCoordinate, endCoordinate));
 
                         Grid[x, bottomPosition] = matchable;
                         Grid[x, y] = MatchableModel.Empty;
@@ -200,6 +201,22 @@ namespace TapMatch.Models
 
             return result;
         }
+        
+        public bool ScanGridForNull()
+        {
+            for (var x = 0; x < Width; x++)
+            {
+                for (var y = 0; y < Height; y++)
+                {
+                    if (!Grid[x, y].IsEmpty) continue;
+                    
+                    Debug.LogError($"Empty at {x}:{y}");
+                    return false;
+                }
+            }
+
+            return true;
+        }
 
         public string GridToString()
         {
@@ -235,13 +252,15 @@ namespace TapMatch.Models
         }
     }
 
-    public readonly struct TileMovement
+    public readonly struct GravityMovement
     {
+        public readonly Guid MatchableId;
         public readonly Coordinate StartCoordinate;
         public readonly Coordinate EndCoordinate;
 
-        public TileMovement(Coordinate startCoordinate, Coordinate endCoordinate)
+        public GravityMovement(Guid id, Coordinate startCoordinate, Coordinate endCoordinate)
         {
+            MatchableId = id;
             StartCoordinate = startCoordinate;
             EndCoordinate = endCoordinate;
         }

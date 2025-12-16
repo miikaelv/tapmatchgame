@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace TapMatch.Views.Utility
 {
@@ -7,25 +9,37 @@ namespace TapMatch.Views.Utility
     {
         private readonly T Prefab;
         private readonly Transform Parent;
-    
-        private readonly Queue<T> Pool = new ();
 
-        protected ObjectPool(T prefab, Transform parent, int initialSize = 10)
+        private readonly Queue<T> Pool = new();
+
+        protected ObjectPool(T prefab, Transform parent)
         {
             Prefab = prefab;
             Parent = parent;
-            
+        }
+
+        protected abstract void OnInstantiate(T instance);
+
+        public void PreBake(int initialSize)
+        {
             for (var i = 0; i < initialSize; i++)
             {
-                var obj = Object.Instantiate(prefab, Parent);
+                var obj = Object.Instantiate(Prefab, Parent);
                 obj.gameObject.SetActive(false);
+                OnInstantiate(obj);
                 Pool.Enqueue(obj);
             }
         }
-
+        
         public T GetFromPool()
         {
-            var obj = Pool.Count > 0 ? Pool.Dequeue() : Object.Instantiate(Prefab, Parent);
+            T obj;
+            if (!Pool.Any())
+            {
+                obj = Object.Instantiate(Prefab, Parent);
+                OnInstantiate(obj);
+            }
+            else obj = Pool.Dequeue();
 
             ResetObject(obj);
             obj.gameObject.SetActive(true);

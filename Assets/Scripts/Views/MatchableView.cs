@@ -1,3 +1,6 @@
+using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using TapMatch.Models.Configs;
 using TapMatch.Models.Utility;
 using UnityEngine;
@@ -15,8 +18,16 @@ namespace TapMatch.Views
         public Image ColorImage;
         public RectTransform RectTransform;
 
+        private Func<Coordinate, CancellationToken, UniTask> OnPressEvent;
+
+        public void SubscribeToOnPress(Func<Coordinate, CancellationToken, UniTask> listener)
+        {
+            OnPressEvent += listener;
+        }
+        
         public void OnPointerDown(PointerEventData eventData)
         {
+            OnPressEvent.Invoke(Coordinate, GameInstance.GlobalCT).Forget();
             Debug.Log($"Clicked {Type.ToString()} matchable at {Coordinate.ToString()}");
         }
     }

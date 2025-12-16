@@ -43,8 +43,9 @@ namespace TapMatch.Views
             // TODO: Temporarily here before I add ModelService
             var gridConfig = await AssetService.LoadScriptableObject<GridConfiguration>(ct);
             GridModel = new GridModel(gridConfig.GridConfig, new System.Random());
-
+            
             var cellSize = (int)View.GridBaseRect.rect.width / GridModel.Width - View.MatchablePrefab.CellSizeOffset;
+            MatchableViewPool = new MatchableViewPool(View.MatchablePrefab, View.MatchablesParent, cellSize, OnMatchablePressed);
             var matchableData = GridModel.GetAllMatchables();
             GridPositions = CreateGridPositions(GridModel.Width, GridModel.Height, cellSize);
             CreateMatchables(matchableData);
@@ -69,14 +70,14 @@ namespace TapMatch.Views
                 RemoveMatchable(toDestroy);
             }
 
-            await UniTask.Delay(100, cancellationToken: ct);
+            await UniTask.Delay(200, cancellationToken: ct);
 
-            foreach (var tileMovement in gravityMovedMatchables)
+            foreach (var gravityMovement in gravityMovedMatchables)
             {
-                //MoveMatchableToPosition(tileMovement.StartCoordinate, tileMovement.EndCoordinate);
+                MoveMatchableToPosition(gravityMovement);
             }
 
-            await UniTask.Delay(100, cancellationToken: ct);
+            await UniTask.Delay(200, cancellationToken: ct);
 
             foreach (var newMatchableColumn in generatedMatchables)
             {
@@ -95,7 +96,7 @@ namespace TapMatch.Views
         {
             if (!Matchables.Remove(id, out var matchable))
             {
-                Debug.LogError($"Couldn't find Matchable {Id} to Remove in View.");
+                Debug.LogError($"Couldn't find Matchable {id} to Remove in View.");
                 return;
             }
 
@@ -128,15 +129,15 @@ namespace TapMatch.Views
             return true;
         }
 
-        private void MoveMatchableToPosition(MatchableModel model, Coordinate destination)
+        private void MoveMatchableToPosition(GravityMovement gravityMovement)
         {
-            if (!Matchables.Remove(model.Id, out var matchable))
+            if (!Matchables.TryGetValue(gravityMovement.MatchableId, out var matchable))
             {
-                Debug.LogError($"Couldn't find Matchable {model.Id.ToString()} to move.");
+                Debug.LogError($"Couldn't find Matchable {gravityMovement.MatchableId.ToString()} to move.");
                 return;
             }
 
-            SetMatchableToPosition(matchable, destination);
+            SetMatchableToPosition(matchable, gravityMovement.EndCoordinate);
         }
 
         private void SetMatchableToPosition(MatchableView matchableView, Coordinate coordinate)
@@ -185,9 +186,6 @@ namespace TapMatch.Views
                     dict.Add(new Coordinate(x, y), tile);
                 }
             }
-
-            MatchableViewPool =
-                new MatchableViewPool(View.MatchablePrefab, View.MatchablesParent, cellSize, width * height);
 
             return dict;
         }
