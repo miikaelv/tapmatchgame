@@ -1,6 +1,7 @@
 # tapmatchgame
 
 **Overview**
+
 A casual matching game where players tap pairs of matching objects on a grid. The project is structured around modular Services, ViewControllers and Models, with clear separation between game logic, state management and view presentation. Core systems are organized using dependency injection using VContainer. The game is structured around asynchronous execution using UniTask.
 
 Configurations are stored in ScriptableObjects **GridConfiguration** and **MatchableColorConfiguration**
@@ -22,7 +23,7 @@ Configurations are stored in ScriptableObjects **GridConfiguration** and **Match
                     
 **Test Framework**
 
-SmokeTests (PlayMode)
+- SmokeTests (PlayMode)
 
 - PlayModeTestBase
   - ViewControllerTestBase
