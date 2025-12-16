@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using TapMatch.UnityServices;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace TapMatch.Views.Utility
 {
@@ -9,13 +9,15 @@ namespace TapMatch.Views.Utility
     {
         private readonly T Prefab;
         private readonly Transform Parent;
+        private readonly IAssetService AssetService;
 
         private readonly Queue<T> Pool = new();
 
-        protected ObjectPool(T prefab, Transform parent)
+        protected ObjectPool(T prefab, Transform parent, IAssetService assetService)
         {
             Prefab = prefab;
             Parent = parent;
+            AssetService = assetService;
         }
 
         protected abstract void OnInstantiate(T instance);
@@ -24,7 +26,7 @@ namespace TapMatch.Views.Utility
         {
             for (var i = 0; i < initialSize; i++)
             {
-                var obj = Object.Instantiate(Prefab, Parent);
+                var obj = AssetService.InstantiateWithInject(Prefab, Parent);
                 obj.gameObject.SetActive(false);
                 OnInstantiate(obj);
                 Pool.Enqueue(obj);
@@ -36,7 +38,7 @@ namespace TapMatch.Views.Utility
             T obj;
             if (!Pool.Any())
             {
-                obj = Object.Instantiate(Prefab, Parent);
+                obj = AssetService.InstantiateWithInject(Prefab, Parent);
                 OnInstantiate(obj);
             }
             else obj = Pool.Dequeue();
@@ -49,6 +51,7 @@ namespace TapMatch.Views.Utility
         public void ReturnToPool(T obj)
         {
             obj.gameObject.SetActive(false);
+            obj.transform.SetParent(Parent);
             Pool.Enqueue(obj);
         }
 

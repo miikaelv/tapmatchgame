@@ -6,11 +6,14 @@ using TapMatch.Models.Utility;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using VContainer;
 
 namespace TapMatch.Views
 {
     public class MatchableView : View, IPointerDownHandler
     {
+        private IGlobalCT GlobalCT;
+        
         public Coordinate Coordinate;
         public MatchableType Type;
         
@@ -20,6 +23,12 @@ namespace TapMatch.Views
 
         private Func<Coordinate, CancellationToken, UniTask> OnPressEvent;
 
+        [Inject]
+        private void Construct(IGlobalCT globalCt)
+        {
+            GlobalCT = globalCt;
+        }
+        
         public void SubscribeToOnPress(Func<Coordinate, CancellationToken, UniTask> listener)
         {
             OnPressEvent += listener;
@@ -27,7 +36,7 @@ namespace TapMatch.Views
         
         public void OnPointerDown(PointerEventData eventData)
         {
-            OnPressEvent.Invoke(Coordinate, GameInstance.GlobalCT).Forget();
+            OnPressEvent.Invoke(Coordinate, GlobalCT.GlobalCT).Forget();
             Debug.Log($"Clicked {Type.ToString()} matchable at {Coordinate.ToString()}");
         }
     }

@@ -29,7 +29,8 @@ namespace TapMatch.Views
         private MatchableViewPool MatchableViewPool;
         public Dictionary<MatchableType, Color> MatchableColorDictionary;
 
-        public GridWindowController(IAssetService assetService, IUIRoot uiRoot) : base(assetService, uiRoot)
+        public GridWindowController(IAssetService assetService, IUIRoot uiRoot, IInputService inputService) : base(
+            assetService, uiRoot, inputService)
         {
         }
 
@@ -43,9 +44,10 @@ namespace TapMatch.Views
             // TODO: Temporarily here before I add ModelService
             var gridConfig = await AssetService.LoadScriptableObject<GridConfiguration>(ct);
             GridModel = new GridModel(gridConfig.GridConfig, new System.Random());
-            
+
             var cellSize = (int)View.GridBaseRect.rect.width / GridModel.Width - View.MatchablePrefab.CellSizeOffset;
-            MatchableViewPool = new MatchableViewPool(View.MatchablePrefab, View.MatchablesParent, cellSize, OnMatchablePressed);
+            MatchableViewPool = new MatchableViewPool(View.MatchablePrefab, View.MatchablesParent, AssetService,
+                cellSize, OnMatchablePressed);
             var matchableData = GridModel.GetAllMatchables();
             GridPositions = CreateGridPositions(GridModel.Width, GridModel.Height, cellSize);
             CreateMatchables(matchableData);
@@ -55,6 +57,8 @@ namespace TapMatch.Views
 
         private async UniTask OnMatchablePressed(Coordinate coordinate, CancellationToken ct)
         {
+            using var _ = InputService.BlockInputInScope();
+
             if (!GridModel.TryGetMatchableAtPosition(coordinate, out var matchable))
             {
                 return;
@@ -196,7 +200,7 @@ namespace TapMatch.Views
 
             if (matchable == null)
                 return false;
-            
+
             matchable.OnPointerDown(null);
 
             return true;

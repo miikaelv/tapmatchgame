@@ -24,6 +24,7 @@ namespace TapMatch.Views
     public abstract class ViewController<T> : IViewController, IDisposable where T : View
     {
         private readonly IUIRoot UIRoot;
+        protected readonly IInputService InputService;
         public T View;
         private T LoadedAsset;
         public string Id => typeof(T).Name;
@@ -34,9 +35,10 @@ namespace TapMatch.Views
 
         protected readonly IAssetService AssetService;
 
-        protected ViewController(IAssetService assetService, IUIRoot uiRoot)
+        protected ViewController(IAssetService assetService, IUIRoot uiRoot, IInputService inputService)
         {
             UIRoot = uiRoot;
+            InputService = inputService;
             AssetService = assetService;
         }
 
@@ -76,7 +78,7 @@ namespace TapMatch.Views
 
             parent = parent == null ? UIRoot.WindowParent : parent;
 
-            View = Object.Instantiate(LoadedAsset, parent);
+            View = AssetService.InstantiateWithInject(LoadedAsset, parent);
             View.SetActive(false);
 
             var result = await OnInstantiate(ct);

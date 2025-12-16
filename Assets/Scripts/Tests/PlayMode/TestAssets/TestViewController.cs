@@ -12,7 +12,8 @@ namespace TapMatch.Tests.PlayMode.TestAssets
         public bool OnPostShowCalled { get; private set; }
         public bool OnHideCalled { get; private set; }
 
-        public TestViewController(IAssetService assetService, IUIRoot uiRoot) : base(assetService, uiRoot)
+        public TestViewController(IAssetService assetService, IUIRoot uiRoot, IInputService inputService) : base(
+            assetService, uiRoot, inputService)
         {
         }
 

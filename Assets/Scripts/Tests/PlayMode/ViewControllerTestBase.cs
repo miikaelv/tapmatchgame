@@ -13,6 +13,7 @@ namespace TapMatch.Tests.PlayMode
     public abstract class ViewControllerTestBase<T> : PlayModeTestBase where T : IDisposable
     {
         private UIRoot UIRoot;
+        private InputService InputService;
         private LifetimeScope Scope;
         private IObjectResolver Container;
         protected T ViewController;
@@ -27,7 +28,9 @@ namespace TapMatch.Tests.PlayMode
 
         private void CreateViewControllerContext(IContainerBuilder builder)
         {
+            builder.Register<TestingGlobalCT>(Lifetime.Singleton).AsImplementedInterfaces();
             builder.RegisterInstance(UIRoot).As<IUIRoot>();
+            builder.RegisterInstance(InputService).As<IInputService>();
             builder.RegisterAssetService();
             CreateContext(builder);
         }
@@ -51,6 +54,7 @@ namespace TapMatch.Tests.PlayMode
             await base.OnOneTimeUnitySetup(ct);
             await SceneManager.LoadSceneAsync("ViewControllerTestScene").ToUniTask(cancellationToken: ct);
             UIRoot = Object.FindFirstObjectByType<UIRoot>();
+            InputService = Object.FindFirstObjectByType<InputService>();
             BuildEnvironment();
         }
 
@@ -59,5 +63,11 @@ namespace TapMatch.Tests.PlayMode
             ViewController = Container.Resolve<T>();
             AssetService = Container.Resolve<AssetService>();
         }
+    }
+
+    public class TestingGlobalCT : IGlobalCT
+    {
+        private readonly CancellationTokenSource GlobalCTSource = new();
+        public CancellationToken GlobalCT => GlobalCTSource.Token;
     }
 }

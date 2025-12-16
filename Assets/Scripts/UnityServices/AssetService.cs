@@ -5,6 +5,8 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using VContainer;
+using VContainer.Unity;
 
 namespace TapMatch.UnityServices
 {
@@ -17,11 +19,18 @@ namespace TapMatch.UnityServices
         public UniTask<T> LoadSingletonView<T>(CancellationToken ct) where T : Component;
         public UniTask<T> LoadViewComponent<T>(string id, CancellationToken ct) where T : Component;
         public UniTask<T> LoadScriptableObject<T>(CancellationToken ct) where T : ScriptableObject;
+        public T InstantiateWithInject<T>(T prefab, Transform parent = null) where T : MonoBehaviour;
     }
 
     public class AssetService : IAssetService, IDisposable
     {
+        private readonly IObjectResolver Resolver;
         private readonly Dictionary<string, AsyncOperationHandle> AssetHandles = new();
+
+        public AssetService(IObjectResolver resolver)
+        {
+            Resolver = resolver;
+        }
 
         public async UniTask<bool> Initialize(CancellationToken ct)
         {
@@ -102,6 +111,9 @@ namespace TapMatch.UnityServices
         public async UniTask<T> LoadScriptableObject<T>(CancellationToken ct) where T : ScriptableObject
             => await LoadAsset<T>(typeof(T).Name, ct);
 
+        public T InstantiateWithInject<T>(T prefab, Transform parent = null) where T : MonoBehaviour =>
+            Resolver.Instantiate(prefab, parent);
+
         public async UniTask<T> LoadAsset<T>(string id, CancellationToken ct)
             where T : class
         {
@@ -113,7 +125,8 @@ namespace TapMatch.UnityServices
 
                 await cached.ToUniTask(cancellationToken: ct);
 
-                return cached as T ?? throw new ArgumentException($"Loaded asset {id} not of requested type {typeof(T).Name}");
+                return cached as T ??
+                       throw new ArgumentException($"Loaded asset {id} not of requested type {typeof(T).Name}");
             }
 
             Debug.Log("Asset handle not found, loading from Addressables");

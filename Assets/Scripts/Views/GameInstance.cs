@@ -7,27 +7,34 @@ using VContainer.Unity;
 
 namespace TapMatch.Views
 {
+    public interface IGlobalCT
+    {
+        public CancellationToken GlobalCT { get; }
+    }
+    
     public interface IGameInstance
     {
         public UniTask<TimeSpan> WaitForGameToLoad(TimeSpan timeout);
         public bool GameLoadComplete { get; }
     }
 
-    public class GameInstance : IStartable, IGameInstance, IDisposable
+    public class GameInstance : IStartable, IGameInstance, IDisposable, IGlobalCT
     {
         public bool GameLoadComplete { get; private set; }
-        private static readonly CancellationTokenSource GlobalCTSource = new();
-        public static CancellationToken GlobalCT => GlobalCTSource.Token;
+        private readonly CancellationTokenSource GlobalCTSource = new();
+        public CancellationToken GlobalCT => GlobalCTSource.Token;
         private DateTime TimeGameLoadStarted;
         private DateTime TimeGameLoadFinished;
 
         private readonly AssetService AssetService;
         private readonly IGridWindowController GridWindowController;
+        private readonly IInputService InputService;
 
-        public GameInstance(AssetService assetService, IGridWindowController gridWindowController)
+        public GameInstance(AssetService assetService, IGridWindowController gridWindowController, IInputService inputService)
         {
             AssetService = assetService;
             GridWindowController = gridWindowController;
+            InputService = inputService;
         }
 
         void IStartable.Start()
@@ -40,6 +47,8 @@ namespace TapMatch.Views
         {
             try
             {
+                using var _ = InputService.BlockInputInScope();
+                
                 TimeGameLoadStarted = DateTime.UtcNow;
 
                 await InitializeServices(ct);

@@ -3,7 +3,6 @@ using NUnit.Framework;
 using TapMatch.Models;
 using TapMatch.Models.Configs;
 using TapMatch.Models.Utility;
-using UnityEngine;
 using Random = System.Random;
 
 namespace TapMatch.Tests.EditMode

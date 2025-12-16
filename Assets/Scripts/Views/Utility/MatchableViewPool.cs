@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using TapMatch.Models.Utility;
+using TapMatch.UnityServices;
 using UnityEngine;
 
 namespace TapMatch.Views.Utility
@@ -11,9 +12,9 @@ namespace TapMatch.Views.Utility
         private readonly float CellSize;
         private readonly Func<Coordinate, CancellationToken, UniTask> OnPressEvent;
 
-        public MatchableViewPool(MatchableView prefab, Transform parent, float cellSize,
+        public MatchableViewPool(MatchableView prefab, Transform parent, IAssetService assetService, float cellSize,
             Func<Coordinate, CancellationToken, UniTask> onPressEvent) : base(
-            prefab, parent)
+            prefab, parent, assetService)
         {
             CellSize = cellSize;
             OnPressEvent = onPressEvent;
