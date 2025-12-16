@@ -1,18 +1,18 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using TapMatch.UnityServices;
-using Views;
+using TapMatch.Views;
 
 namespace TapMatch.Tests.PlayMode.TestAssets
 {
-    public class TestViewControllerPlayMode : ViewControllerPlayMode<TestAsset>
+    public class TestViewController : ViewController<TestAsset>
     {
         public bool OnInstantiateCalled { get; private set; }
         public bool OnPreShowCalled { get; private set; }
         public bool OnPostShowCalled { get; private set; }
         public bool OnHideCalled { get; private set; }
 
-        public TestViewControllerPlayMode(IAssetService assetService) : base(assetService)
+        public TestViewController(IAssetService assetService, IUIRoot uiRoot) : base(assetService, uiRoot)
         {
         }
 
@@ -32,6 +32,12 @@ namespace TapMatch.Tests.PlayMode.TestAssets
         {
             OnInstantiateCalled = true;
             return UniTask.FromResult(true);
+        }
+
+        protected override UniTask<bool> OnHide(CancellationToken ct)
+        {
+            OnHideCalled = true;
+            return base.OnHide(ct);
         }
     }
 }

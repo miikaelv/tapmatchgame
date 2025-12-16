@@ -5,7 +5,7 @@ using TapMatch.UnityServices;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Views
+namespace TapMatch.Views
 {
     public interface IViewController
     {
@@ -21,9 +21,10 @@ namespace Views
         public UniTask<bool> Hide(CancellationToken ct);
     }
 
-    public abstract class ViewControllerPlayMode<T> : IViewController, IDisposable where T : View
+    public abstract class ViewController<T> : IViewController, IDisposable where T : View
     {
-        protected T View;
+        private readonly IUIRoot UIRoot;
+        public T View;
         private T LoadedAsset;
         public string Id => typeof(T).Name;
         public bool IsInstantiated => View != null;
@@ -31,16 +32,17 @@ namespace Views
         public bool IsShown { get; private set; }
         public bool IsViewObjectActive => View.gameObject.activeSelf;
 
-        private readonly IAssetService AssetService;
+        protected readonly IAssetService AssetService;
 
-        protected ViewControllerPlayMode(IAssetService assetService)
+        protected ViewController(IAssetService assetService, IUIRoot uiRoot)
         {
+            UIRoot = uiRoot;
             AssetService = assetService;
         }
 
         public async UniTask<bool> Load(CancellationToken ct)
         {
-            LoadedAsset = await AssetService.LoadSingletonAsset<T>(ct);
+            LoadedAsset = await AssetService.LoadSingletonView<T>(ct);
 
             return LoadedAsset != null;
         }
@@ -63,49 +65,35 @@ namespace Views
         // null parent instantiates at Scene root
         public async UniTask<bool> Instantiate(CancellationToken ct, Transform parent = null)
         {
-            try
+            if (View != null)
             {
-                if (View != null)
-                {
-                    Debug.LogWarning($"Asset already Instantiated");
+                Debug.LogWarning($"Asset already Instantiated");
 
-                    return false;
-                }
-
-                if (LoadedAsset == null) await Load(ct);
-
-                View = Object.Instantiate(LoadedAsset, parent);
-                View.SetActive(false);
-
-                var result = await OnInstantiate(ct);
-
-                return result;
-            }
-            catch (Exception e)
-            {
-                Debug.LogError(e.Message);
                 return false;
             }
+
+            if (LoadedAsset == null) await Load(ct);
+
+            parent = parent == null ? UIRoot.WindowParent : parent;
+
+            View = Object.Instantiate(LoadedAsset, parent);
+            View.SetActive(false);
+
+            var result = await OnInstantiate(ct);
+
+            return result;
         }
 
         public async UniTask<bool> Show(CancellationToken ct)
         {
-            try
-            {
-                if (IsShown) return true;
-                if (!IsInstantiated) await Instantiate(ct);
+            if (IsShown) return true;
+            if (!IsInstantiated) await Instantiate(ct);
 
-                await OnPreShow(ct);
-                View.SetActive(true);
-                await OnPostShow(ct);
-                IsShown = true;
-                return true;
-            }
-            catch (Exception e)
-            {
-                Debug.LogError(e.Message);
-                return false;
-            }
+            await OnPreShow(ct);
+            View.SetActive(true);
+            await OnPostShow(ct);
+            IsShown = true;
+            return true;
         }
 
         public async UniTask<bool> Hide(CancellationToken ct)
@@ -113,7 +101,7 @@ namespace Views
             try
             {
                 if (!IsShown) return true;
-                
+
                 await OnHide(ct);
                 View.SetActive(false);
                 IsShown = false;

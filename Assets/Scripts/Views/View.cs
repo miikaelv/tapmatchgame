@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Views
+namespace TapMatch.Views
 {
     public class View : MonoBehaviour
     {

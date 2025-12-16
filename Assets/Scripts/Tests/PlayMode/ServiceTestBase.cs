@@ -11,20 +11,30 @@ namespace TapMatch.Tests.PlayMode
         protected T Service;
         protected abstract void CreateContext(IContainerBuilder builder);
 
-        protected override void BuildEnvironment()
+        private void BuildEnvironment()
         {
             Scope = LifetimeScope.Create(CreateContext);
             Container = Scope.Container;
             ResolveService();
         }
 
-        protected void ResolveService()
+        protected override void OnOneTimeSetup()
+        {
+            BuildEnvironment();
+        }
+
+        protected override void OnOneTimeTearDown()
+        {
+            ResetEnvironment();
+        }
+
+        private void ResolveService()
         {
             if (Service != null) Service.Dispose();
             Service = Container.Resolve<T>();
         }
 
-        protected override void ResetEnvironment()
+        private void ResetEnvironment()
         {
             if (Container != null) Container.Dispose();
             if (Scope != null) Scope.Dispose();

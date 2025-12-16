@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using Cysharp.Threading.Tasks;
 using NUnit.Framework;
-using TapMatch.UnityServices;
+using TapMatch.Views;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;

@@ -1,10 +1,12 @@
 {
     "name": "Views",
-    "rootNamespace": "",
+    "rootNamespace": "TapMatch",
     "references": [
         "VContainer",
         "UniTask",
-        "UnityServices"
+        "UnityServices",
+        "Models",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

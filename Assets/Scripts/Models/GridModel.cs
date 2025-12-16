@@ -174,6 +174,22 @@ namespace TapMatch.Models
 
             return newTilesData;
         }
+        
+        public Dictionary<Coordinate, MatchableType> GetAllMatchables()
+        {
+            var result = new Dictionary<Coordinate, MatchableType>();
+
+            for (var x = 0; x < Width; x++)
+            {
+                for (var y = 0; y < Height; y++)
+                {
+                    var coord = new Coordinate(x, y);
+                    result[coord] = Grid[x, y];
+                }
+            }
+
+            return result;
+        }
 
         public string GridToString()
         {
@@ -194,13 +210,6 @@ namespace TapMatch.Models
             }
 
             return sb.ToString();
-        }
-        
-        public string GridToString2()
-        {
-            return string.Join("\n",
-                Enumerable.Range(0, Height).Select(r =>
-                    string.Join(", ", Enumerable.Range(0, Width).Select(c => Grid[r, c]))));
         }
     }
 

@@ -108,7 +108,7 @@ namespace TapMatch.Tests.EditMode
             var manualModel = new GridModel(ManualGrid, GridConfig.ValidMatchables.ToArray());
             var matched = manualModel.GetConnectingMatchables(MatchStartCoordinate);
 
-            //CollectionAssert.AreEquivalent(ExpectedCoordinates, matched);
+            CollectionAssert.AreEquivalent(ExpectedCoordinates, matched);
 
             manualModel.ClearMatchables(matched);
             manualModel.ApplyGravity();

@@ -12,18 +12,9 @@ namespace TapMatch.Tests.PlayMode
         protected CancellationToken CT => CTSource.Token;
         private bool OneTimeUnitySetUpDone;
 
-        protected virtual void BuildEnvironment()
-        {
-        }
-
-        protected virtual void ResetEnvironment()
-        {
-        }
-
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
-            BuildEnvironment();
             OnOneTimeSetup();
         }
 
@@ -32,7 +23,6 @@ namespace TapMatch.Tests.PlayMode
         {
             OnOneTimeTearDown();
 
-            ResetEnvironment();
             OneTimeUnitySetUpDone = false;
             CTSource.Cancel();
             CTSource.Dispose();
@@ -44,7 +34,6 @@ namespace TapMatch.Tests.PlayMode
             if (!OneTimeUnitySetUpDone)
             {
                 OneTimeUnitySetUpDone = true;
-                BuildEnvironment();
                 await OnOneTimeUnitySetup(CT);
             }
 
@@ -53,26 +42,6 @@ namespace TapMatch.Tests.PlayMode
 
         [UnityTearDown]
         public IEnumerator UnityTearDown() => UniTask.ToCoroutine(async () => { await OnUnityTearDown(CT); });
-
-        [SetUp]
-        public void Setup()
-        {
-            OnSetup();
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            OnTeardown();
-        }
-
-        protected virtual void OnTeardown()
-        {
-        }
-
-        protected virtual void OnSetup()
-        {
-        }
 
         protected virtual UniTask OnOneTimeUnitySetup(CancellationToken ct) => UniTask.CompletedTask;
         protected virtual UniTask OnUnitySetup(CancellationToken ct) => UniTask.CompletedTask;

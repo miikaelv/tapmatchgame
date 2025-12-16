@@ -28,7 +28,7 @@ namespace TapMatch.Models.Utility
 
             Width = width;
             Height = height;
-            Array = new MatchableType[width, height];
+            Array = new MatchableType[height, width];
         }
 
         private int ToArrayY(int gameY) => Height - 1 - gameY;

@@ -1,10 +1,11 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using TapMatch.UnityServices;
 using UnityEngine;
 using VContainer.Unity;
 
-namespace TapMatch.UnityServices
+namespace TapMatch.Views
 {
     public interface IGameInstance
     {
@@ -21,10 +22,12 @@ namespace TapMatch.UnityServices
         private DateTime TimeGameLoadFinished;
 
         private readonly AssetService AssetService;
+        private readonly IGridWindowController GridWindowController;
 
-        public GameInstance(AssetService assetService)
+        public GameInstance(AssetService assetService, IGridWindowController gridWindowController)
         {
             AssetService = assetService;
+            GridWindowController = gridWindowController;
         }
 
         void IStartable.Start()
@@ -62,9 +65,9 @@ namespace TapMatch.UnityServices
             await AssetService.Initialize(ct);
         }
 
-        private UniTask LoadView(CancellationToken ct)
+        private async UniTask LoadView(CancellationToken ct)
         {
-            return UniTask.CompletedTask;
+            await GridWindowController.Show(ct);
         }
 
         public async UniTask<TimeSpan> WaitForGameToLoad(TimeSpan timeout)
