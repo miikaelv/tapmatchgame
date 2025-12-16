@@ -13,7 +13,7 @@ namespace TapMatch.Models
         public int Width { get; }
         public int Height { get; }
         public bool IsCoordinateValidOnGrid(Coordinate coordinate);
-        public bool TryGetMatchableAtPosition(Coordinate coordinate, out MatchableType matchable);
+        public bool TryGetMatchableAtPosition(Coordinate coordinate, out MatchableModel matchable);
     }
 
     [Serializable]
@@ -25,7 +25,7 @@ namespace TapMatch.Models
         private readonly MatchableType[] ValidMatchables;
         public readonly GameGrid Grid;
 
-        public GridModel(MatchableType[,] grid, MatchableType[] validMatchables)
+        public GridModel(MatchableModel[,] grid, MatchableType[] validMatchables)
         {
             Grid = new GameGrid(grid);
             ValidMatchables = validMatchables;
@@ -49,29 +49,37 @@ namespace TapMatch.Models
             }
         }
 
-        private MatchableType CreateRandomMatchable(Random rng) => ValidMatchables[rng.Next(ValidMatchables.Length)];
+        private MatchableModel CreateRandomMatchable(Random rng)
+        {
+            var type = ValidMatchables[rng.Next(ValidMatchables.Length)];
+            return new MatchableModel(type);
+        }
 
         public bool IsCoordinateValidOnGrid(Coordinate coordinate) => coordinate.X >= 0 && coordinate.X < Width &&
                                                                       coordinate.Y >= 0 && coordinate.Y < Height;
 
-        public void ClearMatchables(IEnumerable<Coordinate> coordinates)
+        public IEnumerable<Guid> ClearMatchables(IEnumerable<Coordinate> coordinates)
         {
+            var cleared = new List<Guid>();
             foreach (var coordinate in coordinates)
             {
-                Grid[coordinate.X, coordinate.Y] = MatchableType.None;
+                cleared.Add(Grid[coordinate.X, coordinate.Y].Id);
+                Grid[coordinate.X, coordinate.Y] = MatchableModel.Empty;
             }
+
+            return cleared;
         }
 
-        public bool TryGetMatchableAtPosition(Coordinate coordinate, out MatchableType matchable)
+        public bool TryGetMatchableAtPosition(Coordinate coordinate, out MatchableModel matchable)
         {
-            matchable = MatchableType.None;
+            matchable = MatchableModel.Empty;
 
             if (!IsCoordinateValidOnGrid(coordinate))
                 return false;
 
             matchable = Grid[coordinate.X, coordinate.Y];
 
-            return matchable != MatchableType.None;
+            return !matchable.IsEmpty;
         }
 
         // Depth First Flood Fill from target coordinate
@@ -79,8 +87,10 @@ namespace TapMatch.Models
         {
             var matched = new List<Coordinate>();
 
-            if (!TryGetMatchableAtPosition(start, out var targetType))
+            if (!TryGetMatchableAtPosition(start, out var startMatchable))
                 return matched;
+            
+            var targetType = startMatchable.Type;
 
             var visited = new bool[Width, Height];
             var stack = new Stack<Coordinate>();
@@ -100,7 +110,7 @@ namespace TapMatch.Models
                     if (visited[neighbor.X, neighbor.Y])
                         continue;
 
-                    if (Grid[neighbor.X, neighbor.Y] != targetType)
+                    if (Grid[neighbor.X, neighbor.Y].Type != targetType)
                         continue;
 
                     stack.Push(neighbor);
@@ -126,7 +136,7 @@ namespace TapMatch.Models
                     var matchable = Grid[x, y];
 
                     // Skip if no Matchable
-                    if (matchable == MatchableType.None) continue;
+                    if (matchable.IsEmpty) continue;
 
                     // Check if the tile needs to move down
                     if (y != bottomPosition)
@@ -136,7 +146,7 @@ namespace TapMatch.Models
                         movements.Add(new TileMovement(startCoordinate, endCoordinate));
 
                         Grid[x, bottomPosition] = matchable;
-                        Grid[x, y] = MatchableType.None;
+                        Grid[x, y] = MatchableModel.Empty;
                     }
 
                     // Increment the bottom position to account for the existing or fallen Matchable
@@ -153,15 +163,15 @@ namespace TapMatch.Models
 
             for (var x = 0; x < Width; x++)
             {
-                var newTileStack = new Stack<(Coordinate coordinate, MatchableType matchable)>();
+                var newTileStack = new Stack<(Coordinate coordinate, MatchableModel matchable)>();
 
                 // Starting from the top, for each None tile, create new Matchable and add it to tileStack
                 for (var y = Height - 1; y >= 0; y--)
                 {
-                    if (Grid[x, y] != MatchableType.None) break;
+                    if (!Grid[x, y].IsEmpty) break;
 
                     var newType = CreateRandomMatchable(rng);
-                    newTileStack.Push(new ValueTuple<Coordinate, MatchableType>(new Coordinate(x, y), newType));
+                    newTileStack.Push(new ValueTuple<Coordinate, MatchableModel>(new Coordinate(x, y), newType));
 
                     Grid[x, y] = newType;
                 }
@@ -175,9 +185,9 @@ namespace TapMatch.Models
             return newTilesData;
         }
         
-        public Dictionary<Coordinate, MatchableType> GetAllMatchables()
+        public Dictionary<Coordinate, MatchableModel> GetAllMatchables()
         {
-            var result = new Dictionary<Coordinate, MatchableType>();
+            var result = new Dictionary<Coordinate, MatchableModel>();
 
             for (var x = 0; x < Width; x++)
             {
@@ -199,7 +209,7 @@ namespace TapMatch.Models
             {
                 for (var x = 0; x < Width; x++)
                 {
-                    sb.Append(Grid[x, y]);
+                    sb.Append(Grid[x, y].Type);
 
                     if (x < Width - 1)
                         sb.Append(", ");
@@ -216,9 +226,9 @@ namespace TapMatch.Models
     public readonly struct NewTilesColumn
     {
         public readonly int X;
-        public readonly List<(Coordinate targetCoordinate, MatchableType matchable)> NewTiles;
+        public readonly List<(Coordinate targetCoordinate, MatchableModel matchable)> NewTiles;
 
-        public NewTilesColumn(int x, List<(Coordinate targetCoordinate, MatchableType matchable)> newTiles)
+        public NewTilesColumn(int x, List<(Coordinate targetCoordinate, MatchableModel matchable)> newTiles)
         {
             X = x;
             NewTiles = newTiles;
@@ -227,8 +237,8 @@ namespace TapMatch.Models
 
     public readonly struct TileMovement
     {
-        private readonly Coordinate StartCoordinate;
-        private readonly Coordinate EndCoordinate;
+        public readonly Coordinate StartCoordinate;
+        public readonly Coordinate EndCoordinate;
 
         public TileMovement(Coordinate startCoordinate, Coordinate endCoordinate)
         {

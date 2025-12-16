@@ -10,11 +10,11 @@ namespace TapMatch.Models.Utility
     /// </summary>
     public class GameGrid
     {
-        public readonly MatchableType[,] Array;
+        public readonly MatchableModel[,] Array;
         public int Width { get; }
         public int Height { get; }
 
-        public GameGrid(MatchableType[,] array)
+        public GameGrid(MatchableModel[,] array)
         {
             Array = array;
             Width = array.GetLength(1);
@@ -28,12 +28,12 @@ namespace TapMatch.Models.Utility
 
             Width = width;
             Height = height;
-            Array = new MatchableType[height, width];
+            Array = new MatchableModel[height, width];
         }
 
         private int ToArrayY(int gameY) => Height - 1 - gameY;
 
-        public MatchableType this[int x, int y]
+        public MatchableModel this[int x, int y]
         {
             get
             {

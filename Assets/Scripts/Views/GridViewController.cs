@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using TapMatch.Models;
@@ -9,6 +11,7 @@ using TapMatch.Views.ScriptableAssets;
 using TapMatch.Views.Utility;
 using UnityEngine;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace TapMatch.Views
 {
@@ -19,13 +22,13 @@ namespace TapMatch.Views
     public class GridWindowController : ViewController<GridWindow>, IGridWindowController
     {
         public GridModel GridModel;
-        
-        public readonly Dictionary<Coordinate, MatchableView> Matchables = new();
+
+        public readonly Dictionary<Guid, MatchableView> Matchables = new();
         public Dictionary<Coordinate, Transform> GridPositions = new();
-        
+
         private MatchableViewPool MatchableViewPool;
         public Dictionary<MatchableType, Color> MatchableColorDictionary;
-        
+
         public GridWindowController(IAssetService assetService, IUIRoot uiRoot) : base(assetService, uiRoot)
         {
         }
@@ -36,11 +39,11 @@ namespace TapMatch.Views
 
             var colorConfig = await AssetService.LoadScriptableObject<MatchableColorConfiguration>(ct);
             MatchableColorDictionary = colorConfig.GetMatchableColorDictionary();
-            
+
             // TODO: Temporarily here before I add ModelService
             var gridConfig = await AssetService.LoadScriptableObject<GridConfiguration>(ct);
             GridModel = new GridModel(gridConfig.GridConfig, new System.Random());
-            
+
             var cellSize = (int)View.GridBaseRect.rect.width / GridModel.Width - View.MatchablePrefab.CellSizeOffset;
             var matchableData = GridModel.GetAllMatchables();
             GridPositions = CreateGridPositions(GridModel.Width, GridModel.Height, cellSize);
@@ -48,8 +51,58 @@ namespace TapMatch.Views
 
             return true;
         }
-        
-        private void CreateMatchables(Dictionary<Coordinate, MatchableType> matchables)
+
+        private async UniTask OnMatchablePressed(Coordinate coordinate, CancellationToken ct)
+        {
+            if (!GridModel.TryGetMatchableAtPosition(coordinate, out var matchable))
+            {
+                return;
+            }
+
+            var destroyedMatchableCoordinates = GridModel.GetConnectingMatchables(coordinate);
+            var destroyedMatchableIds = GridModel.ClearMatchables(destroyedMatchableCoordinates);
+            var gravityMovedMatchables = GridModel.ApplyGravity();
+            var generatedMatchables = GridModel.RefillEmptySpaces(new System.Random());
+
+            foreach (var toDestroy in destroyedMatchableIds)
+            {
+                RemoveMatchable(toDestroy);
+            }
+
+            await UniTask.Delay(100, cancellationToken: ct);
+
+            foreach (var tileMovement in gravityMovedMatchables)
+            {
+                //MoveMatchableToPosition(tileMovement.StartCoordinate, tileMovement.EndCoordinate);
+            }
+
+            await UniTask.Delay(100, cancellationToken: ct);
+
+            foreach (var newMatchableColumn in generatedMatchables)
+            {
+                foreach (var newMatchable in newMatchableColumn.NewTiles)
+                {
+                    if (!TryCreateNewMatchable(newMatchable.matchable, newMatchable.targetCoordinate))
+                    {
+                        Debug.LogError(
+                            $"Could not create new matchable of type {newMatchable.matchable.ToString()} at {newMatchable.matchable}");
+                    }
+                }
+            }
+        }
+
+        private void RemoveMatchable(Guid id)
+        {
+            if (!Matchables.Remove(id, out var matchable))
+            {
+                Debug.LogError($"Couldn't find Matchable {Id} to Remove in View.");
+                return;
+            }
+
+            MatchableViewPool.ReturnToPool(matchable);
+        }
+
+        private void CreateMatchables(Dictionary<Coordinate, MatchableModel> matchables)
         {
             foreach (var matchable in matchables)
             {
@@ -58,42 +111,52 @@ namespace TapMatch.Views
             }
         }
 
-        private bool TryCreateNewMatchable(MatchableType matchable, Coordinate coordinate)
+        private bool TryCreateNewMatchable(MatchableModel matchable, Coordinate coordinate)
         {
-            if (!GridPositions.TryGetValue(coordinate, out var position))
-            {
-                Debug.LogError($"Coordinate {coordinate} has no position on Grid.");
-                return false;
-            }
-
-            if (!MatchableColorDictionary.TryGetValue(matchable, out var color))
+            if (!MatchableColorDictionary.TryGetValue(matchable.Type, out var color))
             {
                 Debug.LogError($"{matchable.ToString()} has no Color in ColorData.");
                 return false;
             }
 
             var matchableView = MatchableViewPool.GetFromPool();
-            matchableView.Type = matchable;
+            matchableView.Type = matchable.Type;
             matchableView.ColorImage.color = color;
-            SetMatchableToPosition(matchableView, coordinate, position);
-            
+            SetMatchableToPosition(matchableView, coordinate);
+            Matchables.Add(matchable.Id, matchableView);
+
             return true;
         }
 
-        private void SetMatchableToPosition(MatchableView matchableView, Coordinate coordinate, Transform position)
+        private void MoveMatchableToPosition(MatchableModel model, Coordinate destination)
         {
+            if (!Matchables.Remove(model.Id, out var matchable))
+            {
+                Debug.LogError($"Couldn't find Matchable {model.Id.ToString()} to move.");
+                return;
+            }
+
+            SetMatchableToPosition(matchable, destination);
+        }
+
+        private void SetMatchableToPosition(MatchableView matchableView, Coordinate coordinate)
+        {
+            if (!GridPositions.TryGetValue(coordinate, out var position))
+            {
+                Debug.LogError($"Coordinate {coordinate} has no position on Grid.");
+                return;
+            }
+
             matchableView.SetParent(position);
             matchableView.RectTransform.localPosition = Vector3.zero;
-            Matchables.Add(coordinate, matchableView);
             matchableView.Coordinate = coordinate;
-            Matchables[coordinate] = matchableView;
         }
 
         // TODO: Refactor to only handle positions as Vector3 instead of Transforms, supremely slow atm
         private Dictionary<Coordinate, Transform> CreateGridPositions(int width, int height, int cellSize)
         {
             var dict = new Dictionary<Coordinate, Transform>();
-            
+
             if (View.GridBase == null)
             {
                 Debug.LogError("GridBase is not assigned!", View);
@@ -125,8 +188,20 @@ namespace TapMatch.Views
 
             MatchableViewPool =
                 new MatchableViewPool(View.MatchablePrefab, View.MatchablesParent, cellSize, width * height);
-            
+
             return dict;
+        }
+
+        public bool PressMatchableAtCoordinate(Coordinate coordinate)
+        {
+            var matchable = Matchables.Values.FirstOrDefault(m => m.Coordinate == coordinate);
+
+            if (matchable == null)
+                return false;
+            
+            matchable.OnPointerDown(null);
+
+            return true;
         }
     }
 }

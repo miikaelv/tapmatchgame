@@ -14,7 +14,7 @@ namespace TapMatch.Views
         public int CellSizeOffset;
         public Image ColorImage;
         public RectTransform RectTransform;
-        
+
         public void OnPointerDown(PointerEventData eventData)
         {
             Debug.Log($"Clicked {Type.ToString()} matchable at {Coordinate.ToString()}");

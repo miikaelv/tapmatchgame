@@ -3,6 +3,7 @@ using NUnit.Framework;
 using TapMatch.Models;
 using TapMatch.Models.Configs;
 using TapMatch.Models.Utility;
+using UnityEngine;
 using Random = System.Random;
 
 namespace TapMatch.Tests.EditMode
@@ -36,7 +37,7 @@ namespace TapMatch.Tests.EditMode
             {
                 for (var y = 0; y < Model.Height; y++)
                 {
-                    var value = Model.Grid[x, y];
+                    var value = Model.Grid[x, y].Type;
                     CollectionAssert.Contains(GridConfig.ValidMatchables, value);
                 }
             }
@@ -61,7 +62,7 @@ namespace TapMatch.Tests.EditMode
             var success = Model.TryGetMatchableAtPosition(coordinate, out var matchable);
 
             Assert.IsFalse(success);
-            Assert.AreEqual(MatchableType.None, matchable);
+            Assert.AreEqual(MatchableType.None, matchable.Type);
         }
 
         private readonly List<Coordinate> ExpectedCoordinates = new()
@@ -96,7 +97,7 @@ namespace TapMatch.Tests.EditMode
         [Test]
         public void Can_get_all_connecting_matchables()
         {
-            var manualModel = new GridModel(ManualGrid, GridConfig.ValidMatchables.ToArray());
+            var manualModel = new GridModel(ConvertToMatchableModelArray(ManualGrid), GridConfig.ValidMatchables.ToArray());
             var matched = manualModel.GetConnectingMatchables(MatchStartCoordinate);
 
             CollectionAssert.AreEquivalent(ExpectedCoordinates, matched);
@@ -105,7 +106,7 @@ namespace TapMatch.Tests.EditMode
         [Test]
         public void Gravity_works_correctly_after_clearing_matchables()
         {
-            var manualModel = new GridModel(ManualGrid, GridConfig.ValidMatchables.ToArray());
+            var manualModel = new GridModel(ConvertToMatchableModelArray(ManualGrid), GridConfig.ValidMatchables.ToArray());
             var matched = manualModel.GetConnectingMatchables(MatchStartCoordinate);
 
             CollectionAssert.AreEquivalent(ExpectedCoordinates, matched);
@@ -113,18 +114,9 @@ namespace TapMatch.Tests.EditMode
             manualModel.ClearMatchables(matched);
             manualModel.ApplyGravity();
 
-            var expectedModel = new GridModel(ExpectedGridAfterGravity, GridConfig.ValidMatchables.ToArray());
+            var expectedModel = new GridModel(ConvertToMatchableModelArray(ExpectedGridAfterGravity), GridConfig.ValidMatchables.ToArray());
 
-            CollectionAssert.AreEquivalent(expectedModel.Grid.Array, manualModel.Grid.Array);
-
-            for (var x = 0; x < expectedModel.Width; x++)
-            {
-                for (var y = 0; y < expectedModel.Height; y++)
-                {
-                    Assert.AreEqual(expectedModel.Grid[x, y], manualModel.Grid[x, y],
-                        $"Grid mismatch at {x},{y}, {manualModel.GridToString()}");
-                }
-            }
+            AssertAreGridsEqual(expectedModel, manualModel);
         }
 
         private readonly MatchableType[,] GenerationTestGrid =
@@ -144,14 +136,43 @@ namespace TapMatch.Tests.EditMode
         [Test]
         public void Grid_can_be_filled_from_None_Tiles()
         {
-            var manualModel = new GridModel(GenerationTestGrid, GridConfig.ValidMatchables.ToArray());
+            var expectedModel = new GridModel(ConvertToMatchableModelArray(ExpectedGenerationTestGrid), GridConfig.ValidMatchables.ToArray());
+            var manualModel = new GridModel(ConvertToMatchableModelArray(GenerationTestGrid), GridConfig.ValidMatchables.ToArray());
+            
             var sequence = new List<int> { 2, 1, 0 };
             var mockRandom = new MockRandom(sequence);
             var newTilesColumns = manualModel.RefillEmptySpaces(mockRandom);
 
-            var expectedModel = new GridModel(ExpectedGenerationTestGrid, GridConfig.ValidMatchables.ToArray());
-
-            CollectionAssert.AreEquivalent(expectedModel.Grid.Array, manualModel.Grid.Array);
+            AssertAreGridsEqual(expectedModel, manualModel);
+        }
+        
+        private static MatchableModel[,] ConvertToMatchableModelArray(MatchableType[,] source)
+        {
+            var width  = source.GetLength(0);
+            var height = source.GetLength(1);
+            var result = new MatchableModel[width, height];
+            
+            for (var x = 0; x < width; x++)
+            {
+                for (var y = 0; y < height; y++)
+                {
+                    result[x, y] = new MatchableModel(source[x, y]);
+                }
+            }
+            
+            return result;
+        }
+        
+        private static void AssertAreGridsEqual(GridModel expectedModel, GridModel actualModel)
+        {
+            for (var x = 0; x < expectedModel.Width; x++)
+            {
+                for (var y = 0; y < expectedModel.Height; y++)
+                {
+                    Assert.AreEqual(expectedModel.Grid[x, y].Type, actualModel.Grid[x, y].Type,
+                        $"Grid mismatch at {x},{y}, {actualModel.GridToString()}");
+                }
+            }
         }
     }
 }
