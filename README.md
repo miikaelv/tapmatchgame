@@ -7,31 +7,31 @@ Configurations are stored in ScriptableObjects **GridConfiguration** and **Match
 
 **High-Level Architecture**
 
-Bootstrap (MainScene)
-   └── VContainer Scope
-        └── GameInstance
-             ├── AssetService (Addressables Loader)
-             ├── ModelService
-             |    └── GameState
-             |          └── GridModel 
-             ├── InputService
-             ├── UIRoot
-             └── GridViewController (Controller)
-                   ├── GridWindow (View)
-                   └── MatchableView (View)
+- Bootstrap (MainScene)
+  - VContainer Scope
+    - GameInstance
+      - AssetService (Addressables Loader)
+      - ModelService
+        - GameState
+          - GridModel
+      - InputService
+      - UIRoot
+      - GridViewController (Controller)
+        - GridWindow (View)
+        - MatchableView (View)
                     
 **Test Framework**
 
 SmokeTests (PlayMode)
 
-PlayModeTestBase
-   ├── ViewControllerTestBase
-        └── GridViewControllerTests      
-   └── ServiceTestBase
-        └── AssetServiceTests
+- PlayModeTestBase
+  - ViewControllerTestBase
+    - GridViewControllerTests
+  - ServiceTestBase
+    - AssetServiceTests
 
-EditModeTestBase
-   └── ModelTestBase
-        └── GridModelTests
+- EditModeTestBase
+  - ModelTestBase
+    - GridModelTests
         
              
