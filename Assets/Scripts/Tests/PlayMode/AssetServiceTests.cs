@@ -5,7 +5,7 @@ using Cysharp.Threading.Tasks;
 using NUnit.Framework;
 using TapMatch.Tests.PlayMode.TestAssets;
 using TapMatch.UnityServices;
-using TapMatch.Views.ScriptableAssets;
+using TapMatch.UnityServices.ScriptableAssets;
 using UnityEngine;
 using UnityEngine.TestTools;
 using VContainer;

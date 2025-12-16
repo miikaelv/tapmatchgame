@@ -8,5 +8,10 @@ namespace TapMatch.UnityServices
         {
             builder.Register<AssetService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
         }
+        
+        public static void RegisterModelService(this IContainerBuilder builder)
+        {
+            builder.Register<ModelService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
+        }
     }
 }

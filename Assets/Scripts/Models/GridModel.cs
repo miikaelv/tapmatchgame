@@ -15,6 +15,7 @@ namespace TapMatch.Models
         public int Height { get; }
         public bool IsCoordinateValidOnGrid(Coordinate coordinate);
         public bool TryGetMatchableAtPosition(Coordinate coordinate, out MatchableModel matchable);
+        public Dictionary<Coordinate, MatchableModel> GetAllMatchables();
     }
 
     [Serializable]
@@ -59,7 +60,7 @@ namespace TapMatch.Models
         public bool IsCoordinateValidOnGrid(Coordinate coordinate) => coordinate.X >= 0 && coordinate.X < Width &&
                                                                       coordinate.Y >= 0 && coordinate.Y < Height;
 
-        public IEnumerable<Guid> ClearMatchables(IEnumerable<Coordinate> coordinates)
+        public List<Guid> ClearMatchables(IEnumerable<Coordinate> coordinates)
         {
             var cleared = new List<Guid>();
             foreach (var coordinate in coordinates)
@@ -202,20 +203,22 @@ namespace TapMatch.Models
             return result;
         }
         
-        public bool ScanGridForNull()
+        public bool ValidateGrid()
         {
+            var isGridValid = true;
+            
             for (var x = 0; x < Width; x++)
             {
                 for (var y = 0; y < Height; y++)
                 {
                     if (!Grid[x, y].IsEmpty) continue;
                     
-                    Debug.LogError($"Empty at {x}:{y}");
-                    return false;
+                    Debug.LogError($"Grid has Empty Matchable at {x}:{y}");
+                    isGridValid = false;
                 }
             }
 
-            return true;
+            return isGridValid;
         }
 
         public string GridToString()

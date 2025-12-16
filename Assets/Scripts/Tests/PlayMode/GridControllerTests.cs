@@ -35,16 +35,18 @@ namespace TapMatch.Tests.PlayMode
         public IEnumerator GridController_grid_is_instantiated_correctly() => UniTask.ToCoroutine(async () =>
         {
             var showResult = await ViewController.Show(CT);
-            var gridModel = ViewController.GridModel;
+            var gridReader = ViewController.GridReader;
 
             Assert.IsTrue(showResult);
             Assert.IsNotNull(ViewController.View);
 
-            for (var x = 0; x < gridModel.Width; x++)
+            for (var x = 0; x < gridReader.Width; x++)
             {
-                for (var y = 0; y < gridModel.Height; y++)
+                for (var y = 0; y < gridReader.Height; y++)
                 {
-                    var matchableModel = gridModel.Grid[x, y];
+                    var success = gridReader.TryGetMatchableAtPosition(new Coordinate(x, y), out var matchableModel);
+                    Assert.IsTrue(success);
+                    
                     var foundGridPos = ViewController.GridPositions.TryGetValue(new Coordinate(x, y), out var gridPos);
 
                     Assert.IsTrue(foundGridPos, $"Expected GridPosition not found at {x}:{y}");
@@ -65,13 +67,13 @@ namespace TapMatch.Tests.PlayMode
             Assert.IsTrue(showResult);
             Assert.IsNotNull(ViewController.View);
 
-            var gridModel = ViewController.GridModel;
+            var gridModel = ViewController.GridReader;
 
             var coord = new Coordinate(0, 0);
             var getMatchableResult = gridModel.TryGetMatchableAtPosition(coord, out var matchable);
             Assert.IsTrue(getMatchableResult);
             
-            var pressed = ViewController.PressMatchableAtCoordinate(coord);
+            var pressed = await ViewController.PressMatchableAtCoordinate(coord);
             Assert.IsTrue(pressed);
         });
     }

@@ -17,6 +17,7 @@ namespace TapMatch.Views
             builder.RegisterInstance(InputService).As<IInputService>();
             
             builder.RegisterAssetService();
+            builder.RegisterModelService();
             
             builder.Register<GridWindowController>(Lifetime.Singleton).As<IGridWindowController>();
         }

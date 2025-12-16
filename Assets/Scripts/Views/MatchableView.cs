@@ -13,10 +13,10 @@ namespace TapMatch.Views
     public class MatchableView : View, IPointerDownHandler
     {
         private IGlobalCT GlobalCT;
-        
+
         public Coordinate Coordinate;
         public MatchableType Type;
-        
+
         public int CellSizeOffset;
         public Image ColorImage;
         public RectTransform RectTransform;
@@ -28,16 +28,21 @@ namespace TapMatch.Views
         {
             GlobalCT = globalCt;
         }
-        
+
         public void SubscribeToOnPress(Func<Coordinate, CancellationToken, UniTask> listener)
         {
             OnPressEvent += listener;
         }
-        
+
         public void OnPointerDown(PointerEventData eventData)
         {
             OnPressEvent.Invoke(Coordinate, GlobalCT.GlobalCT).Forget();
             Debug.Log($"Clicked {Type.ToString()} matchable at {Coordinate.ToString()}");
+        }
+
+        public async UniTask Press()
+        {
+            if (OnPressEvent != null) await OnPressEvent.Invoke(Coordinate, GlobalCT.GlobalCT);
         }
     }
 }

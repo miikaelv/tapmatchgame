@@ -27,19 +27,21 @@ namespace TapMatch.Views
         private DateTime TimeGameLoadFinished;
 
         private readonly AssetService AssetService;
+        private readonly ModelService ModelService;
         private readonly IGridWindowController GridWindowController;
         private readonly IInputService InputService;
 
-        public GameInstance(AssetService assetService, IGridWindowController gridWindowController, IInputService inputService)
+        public GameInstance(AssetService assetService, ModelService modelService,  IGridWindowController gridWindowController, IInputService inputService)
         {
             AssetService = assetService;
+            ModelService = modelService;
             GridWindowController = gridWindowController;
             InputService = inputService;
         }
 
         void IStartable.Start()
         {
-            Debug.Log($"{nameof(GameInstance)} Start");
+            Debug.Log($"{nameof(GameInstance)} Start GameInstance");
             LoadGame(GlobalCT).Forget();
         }
 
@@ -72,6 +74,7 @@ namespace TapMatch.Views
         private async UniTask InitializeServices(CancellationToken ct)
         {
             await AssetService.Initialize(ct);
+            await ModelService.Initialize(ct);
         }
 
         private async UniTask LoadView(CancellationToken ct)

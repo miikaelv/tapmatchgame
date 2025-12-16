@@ -7,7 +7,7 @@ using TapMatch.Models;
 using TapMatch.Models.Configs;
 using TapMatch.Models.Utility;
 using TapMatch.UnityServices;
-using TapMatch.Views.ScriptableAssets;
+using TapMatch.UnityServices.Actions;
 using TapMatch.Views.Utility;
 using UnityEngine;
 using UnityEngine.UI;
@@ -21,17 +21,19 @@ namespace TapMatch.Views
 
     public class GridWindowController : ViewController<GridWindow>, IGridWindowController
     {
-        public GridModel GridModel;
-
+        private readonly IModelService ModelService;
+        public IGridReader GridReader => ModelService.GameStateReader.GridReader;
+        
         public readonly Dictionary<Guid, MatchableView> Matchables = new();
         public Dictionary<Coordinate, Transform> GridPositions = new();
 
         private MatchableViewPool MatchableViewPool;
         public Dictionary<MatchableType, Color> MatchableColorDictionary;
 
-        public GridWindowController(IAssetService assetService, IUIRoot uiRoot, IInputService inputService) : base(
+        public GridWindowController(IAssetService assetService, IUIRoot uiRoot, IInputService inputService, IModelService modelService) : base(
             assetService, uiRoot, inputService)
         {
+            ModelService = modelService;
         }
 
         protected override async UniTask<bool> OnInstantiate(CancellationToken ct)
@@ -41,15 +43,11 @@ namespace TapMatch.Views
             var colorConfig = await AssetService.LoadScriptableObject<MatchableColorConfiguration>(ct);
             MatchableColorDictionary = colorConfig.GetMatchableColorDictionary();
 
-            // TODO: Temporarily here before I add ModelService
-            var gridConfig = await AssetService.LoadScriptableObject<GridConfiguration>(ct);
-            GridModel = new GridModel(gridConfig.GridConfig, new System.Random());
-
-            var cellSize = (int)View.GridBaseRect.rect.width / GridModel.Width - View.MatchablePrefab.CellSizeOffset;
+            var cellSize = (int)View.GridBaseRect.rect.width / GridReader.Width - View.MatchablePrefab.CellSizeOffset;
             MatchableViewPool = new MatchableViewPool(View.MatchablePrefab, View.MatchablesParent, AssetService,
                 cellSize, OnMatchablePressed);
-            var matchableData = GridModel.GetAllMatchables();
-            GridPositions = CreateGridPositions(GridModel.Width, GridModel.Height, cellSize);
+            var matchableData = GridReader.GetAllMatchables();
+            GridPositions = CreateGridPositions(GridReader.Width, GridReader.Height, cellSize);
             CreateMatchables(matchableData);
 
             return true;
@@ -59,31 +57,31 @@ namespace TapMatch.Views
         {
             using var _ = InputService.BlockInputInScope();
 
-            if (!GridModel.TryGetMatchableAtPosition(coordinate, out var matchable))
+            if (!GridReader.TryGetMatchableAtPosition(coordinate, out var matchable))
             {
                 return;
             }
 
-            var destroyedMatchableCoordinates = GridModel.GetConnectingMatchables(coordinate);
-            var destroyedMatchableIds = GridModel.ClearMatchables(destroyedMatchableCoordinates);
-            var gravityMovedMatchables = GridModel.ApplyGravity();
-            var generatedMatchables = GridModel.RefillEmptySpaces(new System.Random());
+            var result = ModelService.CallAction(TapMatchAction.Create(coordinate));
 
-            foreach (var toDestroy in destroyedMatchableIds)
+            if (!result.TryGetResultAndLogOnError(out var tapMatchData))
+                return;
+            
+            foreach (var toDestroy in tapMatchData.DestroyedMatchableIds)
             {
                 RemoveMatchable(toDestroy);
             }
 
             await UniTask.Delay(200, cancellationToken: ct);
 
-            foreach (var gravityMovement in gravityMovedMatchables)
+            foreach (var gravityMovement in tapMatchData.GravityMovedMatchables)
             {
                 MoveMatchableToPosition(gravityMovement);
             }
 
             await UniTask.Delay(200, cancellationToken: ct);
 
-            foreach (var newMatchableColumn in generatedMatchables)
+            foreach (var newMatchableColumn in tapMatchData.GeneratedMatchables)
             {
                 foreach (var newMatchable in newMatchableColumn.NewTiles)
                 {
@@ -194,14 +192,14 @@ namespace TapMatch.Views
             return dict;
         }
 
-        public bool PressMatchableAtCoordinate(Coordinate coordinate)
+        public async UniTask<bool> PressMatchableAtCoordinate(Coordinate coordinate)
         {
             var matchable = Matchables.Values.FirstOrDefault(m => m.Coordinate == coordinate);
 
             if (matchable == null)
                 return false;
 
-            matchable.OnPointerDown(null);
+            await matchable.Press();
 
             return true;
         }
