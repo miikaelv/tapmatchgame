@@ -43,10 +43,10 @@ namespace TapMatch.Views.Grid
             ColorImage.color = color;
         }
         
-        public void MoveToTransformPosition(Coordinate coordinate, Transform newParent)
+        public void MoveToTransformPosition(Coordinate coordinate, Vector3 position, RectTransform gridParent)
         {
-            SetParent(newParent);
-            transform.localPosition = Vector3.zero;
+            SetParent(gridParent);
+            transform.localPosition = position;
             Coordinate = coordinate;
         }
 

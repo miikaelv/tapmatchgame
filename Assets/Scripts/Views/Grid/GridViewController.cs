@@ -11,8 +11,6 @@ using TapMatch.UnityServices;
 using TapMatch.Views.ScriptableConfigs;
 using TapMatch.Views.Utility;
 using UnityEngine;
-using UnityEngine.UI;
-using Object = UnityEngine.Object;
 
 namespace TapMatch.Views.Grid
 {
@@ -24,14 +22,15 @@ namespace TapMatch.Views.Grid
     {
         private readonly IModelService ModelService;
         public IGridReader GridReader => ModelService.GameStateReader.GridReader;
-        
+
         public readonly Dictionary<Guid, MatchableView> Matchables = new();
-        public Dictionary<Coordinate, Transform> GridPositions = new();
+        public Dictionary<Coordinate, Vector3> GridPositions = new();
 
         private MatchableViewPool MatchableViewPool;
         public Dictionary<MatchableType, Color> MatchableColorDictionary;
 
-        public GridWindowController(IAssetService assetService, IUIRoot uiRoot, IInputService inputService, IModelService modelService) : base(
+        public GridWindowController(IAssetService assetService, IUIRoot uiRoot, IInputService inputService,
+            IModelService modelService) : base(
             assetService, uiRoot, inputService)
         {
             ModelService = modelService;
@@ -45,10 +44,10 @@ namespace TapMatch.Views.Grid
             MatchableColorDictionary = colorConfig.GetMatchableColorDictionary();
 
             var cellSize = (int)View.GridBaseRect.rect.width / GridReader.Width - View.MatchablePrefab.CellSizeOffset;
-            MatchableViewPool = new MatchableViewPool(View.MatchablePrefab, View.MatchablesParent, AssetService,
+            MatchableViewPool = new MatchableViewPool(View.MatchablePrefab, View.MatchablePoolParent, AssetService,
                 cellSize, OnMatchablePressed);
             var matchableData = GridReader.GetAllMatchables();
-            GridPositions = CreateGridPositions(GridReader.Width, GridReader.Height, cellSize);
+            GridPositions = View.CreateGridPositions(GridReader.Width, GridReader.Height);
             CreateMatchables(matchableData);
 
             return true;
@@ -64,10 +63,10 @@ namespace TapMatch.Views.Grid
             }
 
             var result = ModelService.CallAction(TapMatchAction.Create(coordinate));
-            
+
             if (!result.TryGetModel(out var tapMatchData))
                 return;
-            
+
             foreach (var toDestroy in tapMatchData.DestroyedMatchableIds)
             {
                 RemoveMatchable(toDestroy);
@@ -86,11 +85,7 @@ namespace TapMatch.Views.Grid
             {
                 foreach (var newMatchable in newMatchableColumn.NewTiles)
                 {
-                    if (!TryCreateNewMatchable(newMatchable.matchable, newMatchable.targetCoordinate))
-                    {
-                        Debug.LogError(
-                            $"Could not create new matchable of type {newMatchable.matchable.ToString()} at {newMatchable.matchable}");
-                    }
+                    CreateNewMatchable(newMatchable.matchable, newMatchable.targetCoordinate);
                 }
             }
         }
@@ -109,26 +104,15 @@ namespace TapMatch.Views.Grid
         private void CreateMatchables(Dictionary<Coordinate, MatchableModel> matchables)
         {
             foreach (var matchable in matchables)
-            {
-                if (!TryCreateNewMatchable(matchable.Value, matchable.Key))
-                    continue;
-            }
+                CreateNewMatchable(matchable.Value, matchable.Key);
         }
 
-        private bool TryCreateNewMatchable(MatchableModel matchable, Coordinate coordinate)
+        private void CreateNewMatchable(MatchableModel matchable, Coordinate coordinate)
         {
-            if (!MatchableColorDictionary.TryGetValue(matchable.Type, out var color))
-            {
-                Debug.LogError($"{matchable.ToString()} has no Color in ColorData.");
-                return false;
-            }
-
             var matchableView = MatchableViewPool.GetFromPool();
             matchableView.SetMatchableType(matchable.Type, MatchableColorDictionary);
             SetMatchableToPosition(matchableView, coordinate);
             Matchables.Add(matchable.Id, matchableView);
-
-            return true;
         }
 
         private void MoveMatchableToPosition(GravityMovement gravityMovement)
@@ -150,44 +134,7 @@ namespace TapMatch.Views.Grid
                 return;
             }
 
-            matchableView.MoveToTransformPosition(coordinate, position);
-        }
-
-        // TODO: Refactor to only handle positions as Vector3 instead of Transforms, supremely slow atm
-        private Dictionary<Coordinate, Transform> CreateGridPositions(int width, int height, int cellSize)
-        {
-            var dict = new Dictionary<Coordinate, Transform>();
-
-            if (View.GridBase == null)
-            {
-                Debug.LogError("GridBase is not assigned!", View);
-                return dict;
-            }
-
-            if (View.TileBase == null)
-            {
-                Debug.LogError("TileBase is not assigned!", View);
-                return dict;
-            }
-
-            View.GridBase.cellSize = new Vector2(cellSize, cellSize);
-            View.GridBase.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            View.GridBase.constraintCount = width;
-
-            for (var i = View.GridBase.transform.childCount - 1; i >= 0; i--)
-                Object.DestroyImmediate(View.GridBase.transform.GetChild(i).gameObject);
-
-            // Instantiate width * height empty GameObjects
-            for (var y = 0; y < height; y++)
-            {
-                for (var x = 0; x < width; x++)
-                {
-                    var tile = Object.Instantiate(View.TileBase, View.GridBase.transform, false);
-                    dict.Add(new Coordinate(x, y), tile);
-                }
-            }
-
-            return dict;
+            matchableView.MoveToTransformPosition(coordinate, position, View.GridBaseRect);
         }
 
         public async UniTask<bool> PressMatchableAtCoordinate(Coordinate coordinate)
