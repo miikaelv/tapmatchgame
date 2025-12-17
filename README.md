@@ -6,6 +6,11 @@ A casual matching game where players tap pairs of matching objects on a grid. Th
 
 Configurations are stored in ScriptableObjects **GridConfiguration** and **MatchableColorConfiguration**
 
+### Notes
+I was too focused initially on the 7 days part of the assignment and only noticed halfway through that there was a time estimate of 8 hours. Time to make the project exceeded that since my scope was bit too big for it, but managed to finish in something around 16 hours total time coding. Very sorry about out that. Started out testing more, but cut down later to save time. Though the TestBases should make it much easy to add the remaining test cases. 
+
+A big trade-off in the architecture is that it is made for a more deterministic game like traditional tap match, not a physics based one like Dream Blast. That would require a different approach since the physics calculation determines what can be matched. Unless you write your own physics engine in C# without UnityEngine you could then only validate things like amount of which color tiles and level requirements, but not match logic itself on server-side.
+
 ## High-Level Architecture
 
 ### Game Architecture
@@ -27,6 +32,9 @@ Configurations are stored in ScriptableObjects **GridConfiguration** and **Match
 
 - SmokeTests (PlayMode)
 
+- AcceptanceTestBase
+  - GridAcceptanceTests
+ 
 - PlayModeTestBase
   - ViewControllerTestBase
     - GridViewControllerTests
@@ -60,4 +68,11 @@ Provides RectTransform for the UI parent for the game.
 
 ### InputService
 Blocks UI input through disabling Graphic raycaster. Can be accessed by Views through IInputService which can provide a scoped InputBlock object. When called the object blocks input through a callback and enables it back OnDispose.
-             
+
+
+## AI Usage
+Used AI to help find bugs. I paste in code that throws or does not work as I intended and AI tries to help with finding the bug. Sometimes helps, sometimes doesn’t. 
+
+Also used AI sometimes to brainstorm what approach to take before writing method / algorithm. I would then write the code out myself, combining ideas the AI and myself had. i.e. ApplyGravity method in GridModel. 
+
+Often I like for AI to find me links to reference code / documentation online that a human has written to avoid weird hallucinations, such as with help using VContainer.
