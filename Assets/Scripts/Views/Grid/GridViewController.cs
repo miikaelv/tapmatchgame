@@ -4,16 +4,17 @@ using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using TapMatch.Models;
+using TapMatch.Models.Actions;
 using TapMatch.Models.Configs;
 using TapMatch.Models.Utility;
 using TapMatch.UnityServices;
-using TapMatch.UnityServices.Actions;
+using TapMatch.Views.ScriptableConfigs;
 using TapMatch.Views.Utility;
 using UnityEngine;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
-namespace TapMatch.Views
+namespace TapMatch.Views.Grid
 {
     public interface IGridWindowController : IViewController
     {
@@ -63,8 +64,8 @@ namespace TapMatch.Views
             }
 
             var result = ModelService.CallAction(TapMatchAction.Create(coordinate));
-
-            if (!result.TryGetResultAndLogOnError(out var tapMatchData))
+            
+            if (!result.TryGetModel(out var tapMatchData))
                 return;
             
             foreach (var toDestroy in tapMatchData.DestroyedMatchableIds)
@@ -123,8 +124,7 @@ namespace TapMatch.Views
             }
 
             var matchableView = MatchableViewPool.GetFromPool();
-            matchableView.Type = matchable.Type;
-            matchableView.ColorImage.color = color;
+            matchableView.SetMatchableType(matchable.Type, MatchableColorDictionary);
             SetMatchableToPosition(matchableView, coordinate);
             Matchables.Add(matchable.Id, matchableView);
 
@@ -150,9 +150,7 @@ namespace TapMatch.Views
                 return;
             }
 
-            matchableView.SetParent(position);
-            matchableView.RectTransform.localPosition = Vector3.zero;
-            matchableView.Coordinate = coordinate;
+            matchableView.MoveToTransformPosition(coordinate, position);
         }
 
         // TODO: Refactor to only handle positions as Vector3 instead of Transforms, supremely slow atm

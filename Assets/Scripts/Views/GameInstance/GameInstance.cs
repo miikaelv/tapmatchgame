@@ -2,10 +2,11 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using TapMatch.UnityServices;
+using TapMatch.Views.Grid;
 using UnityEngine;
 using VContainer.Unity;
 
-namespace TapMatch.Views
+namespace TapMatch.Views.GameInstance
 {
     public interface IGlobalCT
     {

@@ -1,14 +1,16 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using TapMatch.Models.Configs;
 using TapMatch.Models.Utility;
+using TapMatch.Views.GameInstance;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using VContainer;
 
-namespace TapMatch.Views
+namespace TapMatch.Views.Grid
 {
     public class MatchableView : View, IPointerDownHandler
     {
@@ -27,6 +29,25 @@ namespace TapMatch.Views
         private void Construct(IGlobalCT globalCt)
         {
             GlobalCT = globalCt;
+        }
+
+        public void SetMatchableType(MatchableType type, Dictionary<MatchableType, Color> colorDictionary)
+        {
+            if (!colorDictionary.TryGetValue(type, out var color))
+            {
+                Debug.LogError($"{type.ToString()} has no Color in ColorData.");
+                return;
+            }
+            
+            Type = type;
+            ColorImage.color = color;
+        }
+        
+        public void MoveToTransformPosition(Coordinate coordinate, Transform newParent)
+        {
+            SetParent(newParent);
+            transform.localPosition = Vector3.zero;
+            Coordinate = coordinate;
         }
 
         public void SubscribeToOnPress(Func<Coordinate, CancellationToken, UniTask> listener)

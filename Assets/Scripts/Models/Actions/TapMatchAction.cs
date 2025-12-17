@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using TapMatch.Models;
 using TapMatch.Models.Utility;
 
-namespace TapMatch.UnityServices.Actions
+namespace TapMatch.Models.Actions
 {
     public class TapMatchAction : GameAction<TapMatchResult>
     {
@@ -20,7 +19,7 @@ namespace TapMatch.UnityServices.Actions
         {
             // Does not need to run here necessarily, but here for CanExecute demonstration
             var isGridValid = state.GridModel.ValidateGrid();
-
+            
             return isGridValid ? true.ToResult() : Result<bool>.GenericError("Grid is invalid");
         }
 

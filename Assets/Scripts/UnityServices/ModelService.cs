@@ -1,9 +1,10 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using TapMatch.Models;
+using TapMatch.Models.Actions;
 using TapMatch.Models.Utility;
-using TapMatch.UnityServices.Actions;
 using TapMatch.UnityServices.ScriptableAssets;
+using UnityEngine;
 
 namespace TapMatch.UnityServices
 {
@@ -48,7 +49,12 @@ namespace TapMatch.UnityServices
         public Result<TResult> CallAction<TResult>(GameAction<TResult> action)
             where TResult : IGameActionResult
         {
-            return action.Execute(GameState);
+            var result =  action.Execute(GameState);
+            
+            if (result.IsError(out var message))
+                Debug.LogError(message);
+
+            return result;
         }
     }
 }

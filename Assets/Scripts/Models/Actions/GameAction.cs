@@ -1,7 +1,6 @@
-using TapMatch.Models;
 using TapMatch.Models.Utility;
 
-namespace TapMatch.UnityServices.Actions
+namespace TapMatch.Models.Actions
 {
     /// <summary>
     /// Atomized Game Actions that can be created anywhere,

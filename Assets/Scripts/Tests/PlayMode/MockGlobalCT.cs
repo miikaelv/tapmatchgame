@@ -1,5 +1,6 @@
 using System.Threading;
 using TapMatch.Views;
+using TapMatch.Views.GameInstance;
 
 namespace TapMatch.Tests.PlayMode
 {

@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using NUnit.Framework;
 using TapMatch.Models.Utility;
 using TapMatch.Views;
+using TapMatch.Views.Grid;
 using UnityEngine.TestTools;
 using VContainer;
 

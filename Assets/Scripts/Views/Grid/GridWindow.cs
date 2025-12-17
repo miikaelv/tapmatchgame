@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace TapMatch.Views
+namespace TapMatch.Views.Grid
 {
     public class GridWindow : View
     {

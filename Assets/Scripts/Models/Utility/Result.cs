@@ -1,12 +1,10 @@
-using UnityEngine;
-
 namespace TapMatch.Models.Utility
 {
     public enum ResultType
     {
         None = 0,
         Succeeded = 1,
-        Failed = 2,
+        ValidFailure = 2,
         GenericError = 3,
     }
 
@@ -16,7 +14,7 @@ namespace TapMatch.Models.Utility
         private readonly ResultType ResultType;
         private readonly string DeveloperErrorMessage;
         private readonly T Model;
-        
+
         public bool IsError(out string errorMessage)
         {
             errorMessage = DeveloperErrorMessage;
@@ -35,20 +33,6 @@ namespace TapMatch.Models.Utility
                 _ => false
             };
         }
-        
-        public bool TryGetResultAndLogOnError(out T model)
-        {
-            model = default;
-            
-            if (IsError(out var errorMessage))
-            {
-                Debug.LogError($"{errorMessage}");
-                return false;
-            }
-
-            model = Model;
-            return true;
-        }
 
         private Result(T model)
         {
@@ -57,10 +41,19 @@ namespace TapMatch.Models.Utility
             Model = model;
         }
 
-        private Result()
+        private Result(bool validFailure = false)
         {
-            ResultType = ResultType.Failed;
-            DeveloperErrorMessage = "";
+            if (validFailure)
+            {
+                ResultType = ResultType.ValidFailure;
+                DeveloperErrorMessage = "";
+            }
+            else
+            {
+                ResultType = ResultType.GenericError;
+                DeveloperErrorMessage = $"Created Empty Result of return type {typeof(T).Name}";
+            }
+
             Model = default;
         }
 
@@ -74,7 +67,7 @@ namespace TapMatch.Models.Utility
         public static Result<T> GenericError(string developerErrorMessage) =>
             new(ResultType.GenericError, developerErrorMessage);
 
-        public static Result<T> Failed() => new();
+        public static Result<T> ValidFailure() => new(true);
         public static Result<T> Create(T model) => new(model);
     }
 

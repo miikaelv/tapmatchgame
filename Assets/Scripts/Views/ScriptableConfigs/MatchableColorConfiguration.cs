@@ -4,7 +4,7 @@ using System.Linq;
 using TapMatch.Models.Configs;
 using UnityEngine;
 
-namespace TapMatch.Views
+namespace TapMatch.Views.ScriptableConfigs
 {
     [CreateAssetMenu(fileName = "MatchableColorConfiguration", menuName = "TapMatch/MatchableColorConfiguration")]
     public class MatchableColorConfiguration : ScriptableObject

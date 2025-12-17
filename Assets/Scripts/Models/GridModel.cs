@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using TapMatch.Models.Configs;
 using TapMatch.Models.Utility;
-using UnityEngine;
 using Random = System.Random;
 
 namespace TapMatch.Models
@@ -228,7 +227,6 @@ namespace TapMatch.Models
                 {
                     if (!Grid[x, y].IsEmpty) continue;
 
-                    Debug.LogError($"Grid has Empty Matchable at {x}:{y}");
                     isGridValid = false;
                 }
             }

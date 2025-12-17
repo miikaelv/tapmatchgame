@@ -3,6 +3,7 @@ using System.Collections;
 using Cysharp.Threading.Tasks;
 using NUnit.Framework;
 using TapMatch.Views;
+using TapMatch.Views.GameInstance;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using VContainer;

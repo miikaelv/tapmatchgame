@@ -1,4 +1,6 @@
 using TapMatch.UnityServices;
+using TapMatch.Views.GameInstance;
+using TapMatch.Views.Grid;
 using VContainer;
 using VContainer.Unity;
 
@@ -11,7 +13,7 @@ namespace TapMatch.Views
         
         protected override void Configure(IContainerBuilder builder)
         {
-            builder.RegisterEntryPoint<GameInstance>().AsSelf().As<IGameInstance>().As<IGlobalCT>();
+            builder.RegisterEntryPoint<GameInstance.GameInstance>().AsSelf().As<IGameInstance>().As<IGlobalCT>();
             
             builder.RegisterInstance(UIRoot).As<IUIRoot>();
             builder.RegisterInstance(InputService).As<IInputService>();
