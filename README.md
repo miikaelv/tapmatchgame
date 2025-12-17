@@ -27,6 +27,9 @@ Configurations are stored in ScriptableObjects **GridConfiguration** and **Match
 
 - SmokeTests (PlayMode)
 
+- AcceptanceTestBase
+  - GridAcceptanceTests
+ 
 - PlayModeTestBase
   - ViewControllerTestBase
     - GridViewControllerTests
