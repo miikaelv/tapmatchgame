@@ -21,7 +21,8 @@ namespace TapMatch.UnityServices
         }
 
         // TradeOff: Does not currently handle overlapping input blocks due to simple implementation
-        // Blocks all UI Input within scope called
+        // Blocks all UI Input within a scope called by disabling Graphic Raycaster. Whole game is currently in UI.
+        // Meant to be called with using keyword
         public InputBlock BlockInputInScope()
         {
             return InputBlocked

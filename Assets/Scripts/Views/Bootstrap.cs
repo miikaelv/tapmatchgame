@@ -11,7 +11,7 @@ namespace TapMatch.Views
         
         protected override void Configure(IContainerBuilder builder)
         {
-            builder.RegisterEntryPoint<GameInstance>().As<IGameInstance>().As<IGlobalCT>();
+            builder.RegisterEntryPoint<GameInstance>().AsSelf().As<IGameInstance>().As<IGlobalCT>();
             
             builder.RegisterInstance(UIRoot).As<IUIRoot>();
             builder.RegisterInstance(InputService).As<IInputService>();
@@ -19,7 +19,7 @@ namespace TapMatch.Views
             builder.RegisterAssetService();
             builder.RegisterModelService();
             
-            builder.Register<GridWindowController>(Lifetime.Singleton).As<IGridWindowController>();
+            builder.Register<GridWindowController>(Lifetime.Singleton).AsSelf().As<IGridWindowController>();
         }
     }
 }

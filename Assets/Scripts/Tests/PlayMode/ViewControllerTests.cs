@@ -22,6 +22,7 @@ namespace TapMatch.Tests.PlayMode
             Assert.IsTrue(instantiateResult, "Instantiate returned false");
             Assert.IsTrue(ViewController.IsInstantiated);
             Assert.IsTrue(ViewController.OnInstantiateCalled);
+            Assert.IsFalse(ViewController.View.gameObject.activeSelf);
         });
         
         [UnityTest]
@@ -64,6 +65,7 @@ namespace TapMatch.Tests.PlayMode
             var showResult = await controller.Show(CT);
             Assert.IsTrue(showResult, "Show returned false");
             Assert.IsTrue(controller.IsShown, "IsShown false after show");
+            Assert.IsTrue(ViewController.View.gameObject.activeSelf);
         }
         
         private async UniTask HideAndAssert(IViewController controller)
@@ -72,6 +74,7 @@ namespace TapMatch.Tests.PlayMode
             var hideResult = await controller.Hide(CT);
             Assert.IsTrue(hideResult, "Hide returned false");
             Assert.IsFalse(controller.IsShown, "IsShown true after Hide");
+            Assert.IsFalse(ViewController.View.gameObject.activeSelf);
         }
     }
 }

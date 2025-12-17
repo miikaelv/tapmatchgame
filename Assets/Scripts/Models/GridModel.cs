@@ -9,6 +9,9 @@ using Random = System.Random;
 
 namespace TapMatch.Models
 {
+    /// <summary>
+    /// ReadOnly version of Grid for Views
+    /// </summary>
     public interface IGridReader
     {
         public int Width { get; }
@@ -16,8 +19,12 @@ namespace TapMatch.Models
         public bool IsCoordinateValidOnGrid(Coordinate coordinate);
         public bool TryGetMatchableAtPosition(Coordinate coordinate, out MatchableModel matchable);
         public Dictionary<Coordinate, MatchableModel> GetAllMatchables();
+        public Coordinate GetRandomCoordinateWithinGrid(Random rng);
     }
 
+    /// <summary>
+    /// Stores Grid state and logic, could also move logic to GameState to keep this cleaner, but for now this is nice.
+    /// </summary>
     [Serializable]
     public class GridModel : IGridReader
     {
@@ -91,7 +98,7 @@ namespace TapMatch.Models
 
             if (!TryGetMatchableAtPosition(start, out var startMatchable))
                 return matched;
-            
+
             var targetType = startMatchable.Type;
 
             var visited = new bool[Width, Height];
@@ -122,7 +129,7 @@ namespace TapMatch.Models
 
             return matched;
         }
-        
+
         public List<GravityMovement> ApplyGravity()
         {
             var movements = new List<GravityMovement>();
@@ -186,7 +193,8 @@ namespace TapMatch.Models
 
             return newTilesData;
         }
-        
+
+        // For grid construction on View side
         public Dictionary<Coordinate, MatchableModel> GetAllMatchables()
         {
             var result = new Dictionary<Coordinate, MatchableModel>();
@@ -202,17 +210,24 @@ namespace TapMatch.Models
 
             return result;
         }
-        
+
+        public Coordinate GetRandomCoordinateWithinGrid(Random rng)
+        {
+            var x = rng.Next(0, Width);
+            var y = rng.Next(0, Height);
+            return new Coordinate(x, y);
+        }
+
         public bool ValidateGrid()
         {
             var isGridValid = true;
-            
+
             for (var x = 0; x < Width; x++)
             {
                 for (var y = 0; y < Height; y++)
                 {
                     if (!Grid[x, y].IsEmpty) continue;
-                    
+
                     Debug.LogError($"Grid has Empty Matchable at {x}:{y}");
                     isGridValid = false;
                 }
@@ -243,6 +258,7 @@ namespace TapMatch.Models
         }
     }
 
+    // X for which Column to drop from, List is ordered from first to drop to last.
     public readonly struct NewTilesColumn
     {
         public readonly int X;
@@ -255,6 +271,7 @@ namespace TapMatch.Models
         }
     }
 
+    // Start and End Coordinate for Animations
     public readonly struct GravityMovement
     {
         public readonly Guid MatchableId;

@@ -5,8 +5,7 @@ namespace TapMatch.Models.Utility
 {
     /// <summary>
     /// Takes in a 2DArray, uses the Columns as the width and Rows as Height and reverses Y coordinate.
-    /// Alternatively creates a new Array based on width and height and follows these same rules.
-    /// This is to help with manual creation of readable grids.
+    /// This is to help with manual creation of readable grids on test side.
     /// </summary>
     public class GameGrid
     {

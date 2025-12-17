@@ -10,6 +10,9 @@ using Object = UnityEngine.Object;
 
 namespace TapMatch.Tests.PlayMode
 {
+    /// <summary>
+    /// Creates own Scope to test ViewControllers individually in ViewControllerTestScene
+    /// </summary>
     public abstract class ViewControllerTestBase<T> : PlayModeTestBase where T : IDisposable
     {
         private UIRoot UIRoot;

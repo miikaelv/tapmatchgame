@@ -2,7 +2,7 @@ using TapMatch.Models.Configs;
 
 namespace TapMatch.Models
 {
-    //ReadOnly version of GameState for Views
+    // ReadOnly version of GameState for Views
     public interface IGameStateReader
     {
         public IGridReader GridReader { get; }

@@ -4,6 +4,9 @@ using VContainer.Unity;
 
 namespace TapMatch.Tests.PlayMode
 {
+    /// <summary>
+    /// Creates it's own Scope to test Services individually
+    /// </summary>
     public abstract class ServiceTestBase<T> : PlayModeTestBase where T : IDisposable
     {
         private LifetimeScope Scope;

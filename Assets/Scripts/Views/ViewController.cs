@@ -21,6 +21,10 @@ namespace TapMatch.Views
         public UniTask<bool> Hide(CancellationToken ct);
     }
 
+    /// <summary>
+    /// Handles Load, Instantiation, Unload, Show and Hide for larger Views.
+    /// Inheriting classes handle logic to modify views and call created Actions for ModelService based on Input
+    /// </summary>
     public abstract class ViewController<T> : IViewController, IDisposable where T : View
     {
         private readonly IUIRoot UIRoot;

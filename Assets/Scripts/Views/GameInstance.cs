@@ -18,20 +18,25 @@ namespace TapMatch.Views
         public bool GameLoadComplete { get; }
     }
 
+    /// <summary>
+    /// Game entry point, Initializes services, calls first View to start game.
+    /// </summary>
     public class GameInstance : IStartable, IGameInstance, IDisposable, IGlobalCT
     {
         public bool GameLoadComplete { get; private set; }
+        
+        //CancellationToken used by all UniTasks in the whole game in order to stop everything when wanted.
         private readonly CancellationTokenSource GlobalCTSource = new();
         public CancellationToken GlobalCT => GlobalCTSource.Token;
         private DateTime TimeGameLoadStarted;
         private DateTime TimeGameLoadFinished;
 
-        private readonly AssetService AssetService;
-        private readonly ModelService ModelService;
-        private readonly IGridWindowController GridWindowController;
-        private readonly IInputService InputService;
+        public readonly AssetService AssetService;
+        public readonly ModelService ModelService;
+        public readonly GridWindowController GridWindowController;
+        public readonly IInputService InputService;
 
-        public GameInstance(AssetService assetService, ModelService modelService,  IGridWindowController gridWindowController, IInputService inputService)
+        public GameInstance(AssetService assetService, ModelService modelService,  GridWindowController gridWindowController, IInputService inputService)
         {
             AssetService = assetService;
             ModelService = modelService;
@@ -92,6 +97,9 @@ namespace TapMatch.Views
             return timeToLoad;
         }
 
+        /// <summary>
+        /// Cancel GlobalCT
+        /// </summary>
         public void Dispose()
         {
             GlobalCTSource?.Cancel();
