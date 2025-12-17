@@ -7,7 +7,9 @@ A casual matching game where players tap pairs of matching objects on a grid. Th
 Configurations are stored in ScriptableObjects **GridConfiguration** and **MatchableColorConfiguration**
 
 ### Notes
-I was too focused initially on the 7 days part of the assignment and only noticed halfway through that there was a time estimate of 8 hours. Time to make the project exceeded that since my scope was bit too big for it, but managed to finish in something around 16 hours total time coding. Very sorry about out that. Started out testing more, but cut down later to save time. Though the TestBases should make it much easy to add the remaining test cases.
+I was too focused initially on the 7 days part of the assignment and only noticed halfway through that there was a time estimate of 8 hours. Time to make the project exceeded that since my scope was bit too big for it, but managed to finish in something around 16 hours total time coding. Very sorry about out that. Started out testing more, but cut down later to save time. Though the TestBases should make it much easy to add the remaining test cases. 
+
+A big trade-off in the architecture is that it is made for a more deterministic game like traditional tap match, not a physics based one like Dream Blast. That would require a different approach since the physics calculation determines what can be matched. Unless you write your own physics engine in C# without UnityEngine you could then only validate things like amount of which color tiles and level requirements, but not match logic itself on server-side.
 
 ## High-Level Architecture
 
