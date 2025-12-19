@@ -2,15 +2,17 @@
 
 ## Overview
 
-A casual matching game where players tap pairs of matching objects on a grid. The project is structured around modular Services, ViewControllers and Models, with clear separation between game logic, state management and view presentation. Core systems are organized using dependency injection using VContainer. The game is structured around asynchronous execution using UniTask.
+A casual matching game where players tap matching connected tiles on a grid to clear them. Purpose of the project is to showcase knowledge of good architectural design and clean implementation. The project is structured around modular Services, ViewControllers and Models, with clear separation between game logic, state management and view presentation. Core systems are organized using dependency injection using VContainer. The game is structured around asynchronous execution using UniTask.
 
 Configurations are stored in ScriptableObjects **GridConfiguration** and **MatchableColorConfiguration**
 
-### Notes
-I was too focused initially on the 7 days part of the assignment and only noticed halfway through that there was a time estimate of 8 hours. Time to make the project exceeded that since my scope was bit too big for it, but managed to finish in something around 16 hours total time coding. Very sorry about out that. Started out testing more, but cut down later to save time. Though the TestBases should make it much easy to add the remaining test cases. 
+### Future Development Plan
 
-A big trade-off in the architecture is that it is made for a more deterministic game like traditional tap match, not a physics based one like Dream Blast. That would require a different approach since the physics calculation determines what can be matched. Unless you write your own physics engine in C# without UnityEngine you could then only validate things like amount of which color tiles and level requirements, but not match logic itself on server-side.
-
+- Write more tests for full test coverage.
+- Extend ModelService to fully support a async Command pattern.
+- async Animation framework
+- Saving and loading of models to disk and/or cloud.
+  
 ## High-Level Architecture
 
 ### Game Architecture
@@ -32,7 +34,7 @@ A big trade-off in the architecture is that it is made for a more deterministic 
 
 - SmokeTests (PlayMode)
 
-- AcceptanceTestBase
+- AcceptanceTestBase (PlayMode)
   - GridAcceptanceTests
  
 - PlayModeTestBase
@@ -44,7 +46,6 @@ A big trade-off in the architecture is that it is made for a more deterministic 
 - EditModeTestBase
   - ModelTestBase
     - GridModelTests
-
 
 ## Central Classes
 
@@ -69,6 +70,10 @@ Provides RectTransform for the UI parent for the game.
 ### InputService
 Blocks UI input through disabling Graphic raycaster. Can be accessed by Views through IInputService which can provide a scoped InputBlock object. When called the object blocks input through a callback and enables it back OnDispose.
 
+### Notes
+I was too focused initially on the 7 days part of the assignment and only noticed halfway through that there was a time estimate of 8 hours. Time to make the project exceeded that since my scope was bit too big for it, but managed to finish in something around 16 hours total time coding. Very sorry about out that. Started out testing more, but cut down later to save time. Though the TestBases should make it much easy to add the remaining test cases. 
+
+A big trade-off in the architecture is that it is made for a more deterministic game like traditional tap match, not a physics based one like Dream Blast. That would require a different approach since the physics calculation determines what can be matched. Unless you write your own physics engine in C# without UnityEngine you could then only validate things like amount of which color tiles and level requirements, but not match logic itself on server-side.
 
 ## AI Usage
 Used AI to help find bugs. I paste in code that throws or does not work as I intended and AI tries to help with finding the bug. Sometimes helps, sometimes doesn’t. 
